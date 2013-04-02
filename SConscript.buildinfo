@@ -16,7 +16,10 @@ def getSysInfo():
     else:
         return " ".join( os.uname() )
 
-buildinfo_filename = '#build/buildinfo.cpp'
+if env.Hygenic():
+    buildinfo_filename = '$BUILD_DIR/buildinfo.cpp'
+else:
+    buildinfo_filename = '#build/buildinfo.cpp'
 
 buildinfo_template = '''
 #include <string>

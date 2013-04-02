@@ -9,7 +9,7 @@ from buildscripts import utils
 Import( "has_option env shellEnv testEnv" )
 
 def add_exe( v ):
-    return "${PROGPREFIX}%s${PROGSUFFIX}" % v
+    return "$INSTALL_DIR/bin/${PROGPREFIX}%s${PROGSUFFIX}" % v
 
 smokeEnv = testEnv.Clone()
 smokeEnv['ENV']['PATH']=os.environ['PATH']

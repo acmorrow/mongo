@@ -18,6 +18,7 @@ import copy
 import datetime
 import imp
 import os
+import platform
 import re
 import shutil
 import stat
@@ -32,14 +33,6 @@ from buildscripts import moduleconfig
 import libdeps
 
 EnsureSConsVersion( 1, 1, 0 )
-if "uname" in dir(os):
-    scons_data_dir = ".scons/%s/%s" % ( os.uname()[0] , os.getenv( "HOST" , "nohost" ) )
-else:
-    scons_data_dir = ".scons/%s/" % os.getenv( "HOST" , "nohost" )
-SConsignFile( scons_data_dir + "/sconsign" )
-
-DEFAULT_INSTALL_DIR = "/usr/local"
-
 
 def findSettingsSetup():
     sys.path.append( "." )
@@ -148,12 +141,17 @@ def get_variant_dir():
 add_option( "mute" , "do not display commandlines for compiling and linking, to reduce screen noise", 0, False )
 
 # installation/packaging
-add_option( "prefix" , "installation prefix" , 1 , False, default=DEFAULT_INSTALL_DIR )
+add_option( "prefix" , "installation prefix" , 1 , False )
 add_option( "distname" , "dist name (0.8.0)" , 1 , False )
 add_option( "distmod", "additional piece for full dist name" , 1 , False )
 add_option( "nostrip", "do not strip installed binaries" , 0 , False )
 add_option( "extra-variant-dirs", "extra variant dir components, separated by commas", 1, False)
 add_option( "add-branch-to-variant-dir", "add current git branch to the variant dir", 0, False )
+
+build_style_choices = ["normal", "hygenic"]
+add_option( "build-style", "Select style of build: hygenic (experimental) doesn't pollute the source root).",
+            1, False,
+            type="choice", choices=build_style_choices, default=build_style_choices[0] )
 
 add_option( "sharedclient", "build a libmongoclient.so/.dll" , 0 , False )
 add_option( "full", "include client and headers when doing scons install", 0 , False )
@@ -312,6 +310,16 @@ usePCH = has_option( "usePCH" )
 
 justClientLib = (COMMAND_LINE_TARGETS == ['mongoclient'])
 
+hygenic = (get_option('build-style') == 'hygenic')
+
+if hygenic:
+    scons_data_dir = 'build/scons/%s/%s' % (os.sys.platform, platform.node())
+else:
+    if "uname" in dir(os):
+        scons_data_dir = ".scons/%s/%s" % ( os.uname()[0] , os.getenv( "HOST" , "nohost" ) )
+    else:
+        scons_data_dir = ".scons/%s/" % os.getenv( "HOST" , "nohost" )
+
 env = Environment( BUILD_DIR=variantDir,
                    CLIENT_ARCHIVE='${CLIENT_DIST_BASENAME}${DIST_ARCHIVE_SUFFIX}',
                    CLIENT_DIST_BASENAME=get_option('client-dist-basename'),
@@ -324,20 +332,29 @@ env = Environment( BUILD_DIR=variantDir,
                    MODULE_LIBDEPS_MONGOS=[],
                    MODULE_LIBDEPS_MONGOSHELL=[],
                    MODULETEST_ALIAS='moduletests',
-                   MODULETEST_LIST='#build/moduletests.txt',
+                   MODULETEST_LIST = (
+                       hygenic and '$BUILD_DIR/moduletests.txt' or '#build/moduletests.txt'),
                    MSVS_ARCH=msarch ,
                    PYTHON=utils.find_python(),
                    SERVER_ARCHIVE='${SERVER_DIST_BASENAME}${DIST_ARCHIVE_SUFFIX}',
                    TARGET_ARCH=msarch ,
                    tools=["default", "gch", "jsheader", "mergelib", "unittest"],
                    UNITTEST_ALIAS='unittests',
-                   UNITTEST_LIST='#build/unittests.txt',
+                   UNITTEST_LIST = (
+                       hygenic and '$BUILD_DIR/unittests.txt' or '#build/moduletests.txt'),
                    PYSYSPLATFORM=os.sys.platform,
-
                    PCRE_VERSION='8.30',
-                   CONFIGUREDIR = '#' + scons_data_dir + '/sconf_temp',
-                   CONFIGURELOG = '#' + scons_data_dir + '/config.log'
+                   CONFIGUREDIR = (
+                       hygenic and '$BUILD_DIR/sconf_temp' or ('#' + scons_data_dir + '/sconf_temp')),
+                   CONFIGURELOG = (
+                       hygenic and '$BUILD_DIR/config.log' or ('#' + scons_data_dir + '/config.log')),
                    )
+
+def Hygenic(self):
+    return hygenic
+env.AddMethod(Hygenic)
+
+env.SConsignFile(scons_data_dir + "/sconsign")
 
 env['_LIBDEPS'] = '$_LIBDEPS_OBJS'
 
@@ -496,7 +513,6 @@ if force64:
 
 env['PROCESSOR_ARCHITECTURE'] = processor
 
-installDir = DEFAULT_INSTALL_DIR
 nixLibPrefix = "lib"
 
 dontReplacePackage = False
@@ -504,6 +520,10 @@ isBuildingLatest = False
 
 if has_option( "prefix" ):
     installDir = GetOption( "prefix" )
+elif hygenic:
+    installDir = "${BUILD_DIR}/install"
+else:
+    installDir = "/usr/local"
 
 def filterExists(paths):
     return filter(os.path.exists, paths)
@@ -527,7 +547,8 @@ if "darwin" == os.sys.platform:
     if force64:
        env.Append( EXTRACPPPATH=["/usr/64/include"] )
        env.Append( EXTRALIBPATH=["/usr/64/lib"] )
-       if installDir == DEFAULT_INSTALL_DIR:
+       # TODO: Is this even vaguely correct on modern OS X machines?
+       if installDir == '/usr/local':
            installDir = "/usr/64/"
     else:
        env.Append( EXTRACPPPATH=filterExists(["/sw/include" , "/opt/local/include"]) )

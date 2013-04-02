@@ -37,7 +37,8 @@ def build_cpp_unit_test(env, target, source, **kwargs):
 
     result = env.Program(target, source, **kwargs)
     env.RegisterUnitTest(result[0])
-    env.Install("#/build/unittests/", target)
+    if not env.Hygenic():
+        env.Install("#/build/unittests/", target)
     return result
 
 def generate(env):

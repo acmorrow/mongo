@@ -664,15 +664,18 @@ if has_option( 'use-cpu-profiler' ):
 env.StaticLibrary("coreserver", coreServerFiles, LIBDEPS=["mongocommon", "scripting"])
 
 # main db target
-mongod = env.Install(
-    '#/', env.Program( "mongod", mongodOnlyFiles,
-                       LIBDEPS=["coredb",
-                                "coreserver",
-                                "mongodandmongos",
-                                "ntservice",
-                                "serveronly",
-                                ] + env['MODULE_LIBDEPS_MONGOD'] ) )
-Default( mongod )
+mongod = env.Program( "mongod", mongodOnlyFiles,
+                      LIBDEPS=["coredb",
+                               "coreserver",
+                               "mongodandmongos",
+                               "ntservice",
+                               "serveronly",
+                               ] + env['MODULE_LIBDEPS_MONGOD'] )
+if not env.Hygenic():
+    Default( env.Install( target = "#/", source = mongod ) )
+#else:
+#    mongod_program = mongod
+#    env.Export(mongod_program)
 
 # tools
 allToolFiles = [ "tools/tool.cpp", "tools/stat_util.cpp" ]
@@ -681,27 +684,33 @@ env.StaticLibrary("alltools", allToolFiles, LIBDEPS=["serveronly", "coreserver",
 normalTools = [ "dump", "restore", "export", "import", "stat", "top", "oplog" ]
 env.Alias( "tools", [ "#/${PROGPREFIX}mongo" + x + "${PROGSUFFIX}" for x in normalTools ] )
 for x in normalTools:
-    env.Install( '#/', env.Program( "mongo" + x, [ "tools/" + x + ".cpp" ],
-                                    LIBDEPS=["alltools"]) )
+    tool = env.Program( "mongo" + x, [ "tools/" + x + ".cpp" ],
+                        LIBDEPS=["alltools"])
+    if not env.Hygenic():
+        env.Install(target = "#/", source = tool)
 
 env.StaticLibrary("docgenerator", "tools/docgenerator.cpp")
 
 #some special tools
-env.Install( '#/', [
-        env.Program( "mongofiles", "tools/files.cpp", LIBDEPS=["alltools", "gridfs"] ),
-        env.Program( "docgen", "tools/docgeneratormain.cpp", LIBDEPS=["alltools", "docgenerator"] ),
-        env.Program( "loadgen", "tools/loadgenerator.cpp", LIBDEPS=["alltools", "docgenerator"] ),
-        env.Program( "bsondump", "tools/bsondump.cpp", LIBDEPS=["alltools"]),
-        env.Program( "mongobridge", "tools/bridge.cpp", LIBDEPS=["alltools"]),
-        env.Program( "mongoperf", "client/examples/mongoperf.cpp", LIBDEPS=["alltools"] ),
-        ] )
+special_tools = [
+    env.Program( "mongofiles", "tools/files.cpp", LIBDEPS=["alltools", "gridfs"] ),
+    env.Program( "docgen", "tools/docgeneratormain.cpp", LIBDEPS=["alltools", "docgenerator"] ),
+    env.Program( "loadgen", "tools/loadgenerator.cpp", LIBDEPS=["alltools", "docgenerator"] ),
+    env.Program( "bsondump", "tools/bsondump.cpp", LIBDEPS=["alltools"]),
+    env.Program( "mongobridge", "tools/bridge.cpp", LIBDEPS=["alltools"]),
+    env.Program( "mongoperf", "client/examples/mongoperf.cpp", LIBDEPS=["alltools"] ),
+]
+
+if not env.Hygenic():
+    env.Install(target = '#/', source = special_tools)
 
 # mongos
 mongos = env.Program(
     "mongos", [ "s/server.cpp"] ,
     LIBDEPS=["mongoscore", "coreserver", "coredb", "mongocommon", "coreshard", "dbcmdline", "ntservice",
              "mongodandmongos", "s/upgrade"] + env['MODULE_LIBDEPS_MONGOS'])
-env.Install( '#/', mongos )
+if not env.Hygenic():
+    env.Install( target = '#/', source = mongos )
 
 env.Library("clientandshell", ["client/clientAndShell.cpp"],
                               LIBDEPS=["mongocommon",
@@ -724,24 +733,26 @@ env.StaticLibrary('mocklib', [
     ],
     LIBDEPS=['mongocommon'])
 
-test = testEnv.Install(
-    '#/',
-    testEnv.Program("test",
-                    [ f for f in Glob("dbtests/*.cpp") if not str(f).endswith('framework.cpp') ],
-                    LIBDEPS = [
-                       "mongocommon",
-                       "serveronly",
-                       "coreserver",
-                       "coredb",
-                       "testframework",
-                       "gridfs",
-                       "s/upgrade",
-                       "mocklib"]))
+test = testEnv.Program("test",
+                       [ f for f in Glob("dbtests/*.cpp") if not str(f).endswith('framework.cpp') ],
+                       LIBDEPS = [
+                          "mongocommon",
+                          "serveronly",
+                          "coreserver",
+                          "coredb",
+                          "testframework",
+                          "gridfs",
+                          "s/upgrade",
+                          "mocklib"])
+if not testEnv.Hygenic():
+    env.Install( target = "#/", source = test )
 
 if len(testEnv.subst('$PROGSUFFIX')):
     testEnv.Alias( "test", "#/${PROGPREFIX}test${PROGSUFFIX}" )
 
-env.Install( '#/', testEnv.Program( "perftest", [ "dbtests/perf/perftest.cpp" ], LIBDEPS=["serveronly", "coreserver", "coredb", "testframework" ] ) )
+perftest = testEnv.Program( "perftest", [ "dbtests/perf/perftest.cpp" ], LIBDEPS=["serveronly", "coreserver", "coredb", "testframework" ] )
+if not testEnv.Hygenic():
+    testEnv.Install( target = '#/', source = perftest )
 
 # --- sniffer ---
 mongosniff_built = False
@@ -755,8 +766,10 @@ if darwin or env["_HAVEPCAP"]:
     else:
         sniffEnv.Append( LIBS=[ "wpcap" ] )
 
-    sniffEnv.Install( '#/', sniffEnv.Program( "mongosniff", "tools/sniffer.cpp",
-                                              LIBDEPS=["gridfs", "serveronly", "coreserver", "coredb"]))
+    mongosniff = sniffEnv.Program( "mongosniff", "tools/sniffer.cpp",
+                                   LIBDEPS=["gridfs", "serveronly", "coreserver", "coredb"])
+    if not sniffEnv.Hygenic():
+        sniffEnv.Install( target = '#/', source = mongosniff )
 
 # --- shell ---
 
@@ -787,7 +800,8 @@ if shellEnv is not None:
         LIBDEPS=[ "clientandshell", "mongocommon", "scripting", 
                  "$BUILD_DIR/third_party/pcrecpp"] + env['MODULE_LIBDEPS_MONGOSHELL'] )
 
-    shellEnv.Install( '#/', mongo_shell )
+    if not shellEnv.Hygenic():
+        shellEnv.Install( '#/', mongo_shell )
 
 #  ----  INSTALL -------
 
@@ -887,13 +901,15 @@ if not len(module_banner_filenames) == len(env['MODULE_BANNERS']):
 module_banner_dirs = set([Dir('#').rel_path(f.get_dir()) for f in env['MODULE_BANNERS']])
 module_banner_transforms = ["--transform %s=$SERVER_DIST_BASENAME" % d for d in module_banner_dirs]
 
-env.Command(
-    '#/${SERVER_ARCHIVE}',
+server_archive = env.Command(
+    '$SERVER_ARCHIVE',
     ['#buildscripts/make_archive.py'] + env["MODULE_BANNERS"] + distBinaries,
     ' '.join(['$PYTHON ${SOURCES[0]} -o $TARGET'] + module_banner_transforms + [
             '--transform ${str(Dir(BUILD_DIR))}/mongo/stripped=$SERVER_DIST_BASENAME/bin',
             '--transform ${str(Dir(BUILD_DIR))}/mongo=$SERVER_DIST_BASENAME/bin',
             '${TEMPFILE(SOURCES[1:])}']))
+if not env.Hygenic():
+    env.Install( target = "#/", source = server_archive )
 
 #final alias
 env.Alias( "install", "$INSTALL_DIR" )
