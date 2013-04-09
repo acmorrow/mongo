@@ -451,6 +451,8 @@ def runTest(test):
 
     # FIXME: we don't handle the case where the subprocess
     # hangs... that's bad.
+    #
+    # XXX ACM BREADCRUMB
     if ( argv[0].endswith( 'mongo' ) or argv[0].endswith( 'mongo.exe' ) ) and not '--eval' in argv :
         evalString = 'TestData = new Object();' + \
                      'TestData.testPath = "' + path + '";' + \

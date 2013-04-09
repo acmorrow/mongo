@@ -271,6 +271,7 @@ SyncCCTest.prototype.tempStart = function( num ){
 function startParallelShell( jsCode, port ){
     var x;
 
+    // XXX ACM BREADCRUMB
     var args = ["mongo"];
     if (port) {
         args.push("--port", port);

@@ -363,6 +363,7 @@ jsTestPath = function(){
 var _jsTestOptions = { enableTestCommands : true }; // Test commands should be enabled by default
 
 jsTestOptions = function(){
+    // XXX ACM BREADCRUMB
     if( TestData ) {
         return Object.merge(_jsTestOptions,
                             { noJournal : TestData.noJournal,
