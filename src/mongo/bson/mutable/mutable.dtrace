@@ -1,0 +1,9 @@
+provider mutable {
+
+    probe document_create();
+    probe document_destroy();
+    probe document_reset();
+
+    probe damage_event_create(size_t);
+    probe rep_create(uint32_t);
+};

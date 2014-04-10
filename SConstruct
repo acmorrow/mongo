@@ -309,6 +309,10 @@ add_option('propagate-shell-environment',
            "Pass shell environment to sub-processes (NEVER for production builds)",
            0, False)
 
+add_option('disable-probes',
+           'Suppress generation of dtrace/systemtap probes',
+           0, False)
+
 if darwin:
     osx_version_choices = ['10.6', '10.7', '10.8', '10.9']
     add_option("osx-version-min", "minimum OS X version to support", 1, True,
@@ -413,7 +417,7 @@ env = Environment( BUILD_DIR=variantDir,
                    PYTHON=utils.find_python(),
                    SERVER_ARCHIVE='${SERVER_DIST_BASENAME}${DIST_ARCHIVE_SUFFIX}',
                    TARGET_ARCH=msarch ,
-                   tools=["default", "gch", "jsheader", "mergelib", "unittest"],
+                   tools=["default", "gch", "jsheader", "mergelib", "unittest", "dtrace"],
                    UNITTEST_ALIAS='unittests',
                    UNITTEST_LIST='#build/unittests.txt',
                    PYSYSPLATFORM=os.sys.platform,
@@ -469,6 +473,7 @@ if has_option('mute'):
     env.Append( LINKCOMSTR = "Linking $TARGET" )
     env.Append( SHLINKCOMSTR = env["LINKCOMSTR"] )
     env.Append( ARCOMSTR = "Generating library $TARGET" )
+    env.Append( DTRACECOMSTR = "Generating dtrace header $TARGET" )
 
 if has_option('mongod-concurrency-level'):
     env.Append(CPPDEFINES=['MONGOD_CONCURRENCY_LEVEL=MONGOD_CONCURRENCY_LEVEL_%s' % get_option('mongod-concurrency-level').upper()])
@@ -1367,6 +1372,10 @@ def doConfigure(myenv):
 
     if conf.CheckHeader('unistd.h'):
         conf.env.Append(CPPDEFINES=['MONGO_HAVE_HEADER_UNISTD_H'])
+
+    if not has_option('disable-probes'):
+        if conf.CheckHeader('dtrace.h') or conf.CheckHeader('sys/sdt.h'):
+            conf.env.Append(CPPDEFINES=['MONGO_HAVE_DTRACE'])
 
     if solaris or conf.CheckDeclaration('clock_gettime', includes='#include <time.h>'):
         conf.CheckLib('rt')

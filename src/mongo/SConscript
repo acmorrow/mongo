@@ -76,6 +76,12 @@ env.CppUnitTest( "md5_test", ["util/md5_test.cpp", "util/md5main.cpp" ],
 env.CppUnitTest( "stringutils_test", [ "util/stringutils_test.cpp" ],
                  LIBDEPS=["stringutils"] )
 
+env.DTraceH(
+    source=[
+        'bson/mutable/mutable.dtrace',
+    ]
+)
+
 env.Library('bson', [
         'bson/mutable/document.cpp',
         'bson/mutable/element.cpp',
@@ -85,7 +91,7 @@ env.Library('bson', [
         'bson/oid.cpp',
         "bson/optime.cpp",
         'db/jsobj.cpp',
-        'db/json.cpp'
+        'db/json.cpp',
         ], LIBDEPS=[
         'base/base',
         'md5',
@@ -1236,3 +1242,4 @@ env.Command(
 
 #final alias
 env.Alias( "install", "$INSTALL_DIR" )
+

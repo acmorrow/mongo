@@ -28,6 +28,11 @@
 
 #include "mongo/bson/mutable/damage_vector.h"
 
+#if defined(MONGO_HAVE_DTRACE)
+#include "mongo/util/dtrace.h"
+#include "mongo/bson/mutable/mutable_probes.h"
+#endif
+
 namespace mongo {
 namespace mutablebson {
 
@@ -555,6 +560,8 @@ namespace mutablebson {
             , _damages()
             , _inPlaceMode(inPlaceMode) {
 
+            MONGO_PROBE(MUTABLE_DOCUMENT_CREATE);
+
             // We always have a BSONObj for the leaves, and we often have
             // one for our base document, so reserve 2.
             _objects.reserve(2);
@@ -573,10 +580,13 @@ namespace mutablebson {
         }
 
         ~Impl() {
+            MONGO_PROBE(MUTABLE_DOCUMENT_DESTROY);
             _leafBuilder.abandon();
         }
 
         void reset(Document::InPlaceMode inPlaceMode) {
+            MONGO_PROBE(MUTABLE_DOCUMENT_RESET);
+
             // Clear out the state in the vectors.
             _slowElements.clear();
             _numElements = 0;
@@ -628,6 +638,7 @@ namespace mutablebson {
             };
 
             const Element::RepIdx id = *newIdx = _numElements++;
+            MONGO_PROBE(MUTABLE_REP_CREATE, id);
 
             if (id < kFastReps) {
                 return _fastElements[id] = defaultRep;
@@ -997,6 +1008,9 @@ namespace mutablebson {
         void recordDamageEvent(DamageEvent::OffsetSizeType targetOffset,
                                DamageEvent::OffsetSizeType sourceOffset,
                                size_t size) {
+
+            MONGO_PROBE(MUTABLE_DAMAGE_EVENT_CREATE, size);
+
             _damages.push_back(DamageEvent());
             _damages.back().targetOffset = targetOffset;
             _damages.back().sourceOffset = sourceOffset;
