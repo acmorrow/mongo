@@ -1,4 +1,5 @@
 add_subdirectory(auth)
+add_subdirectory(catalog)
 add_subdirectory(geo)
 add_subdirectory(matcher)
 add_subdirectory(ops)

@@ -69,6 +69,7 @@ add_library(mongo-db-auth-server-common
 )
 
 target_link_libraries(mongo-db-auth-server-common
+  mongo-client
   mongo-db-auth-core
 )
 

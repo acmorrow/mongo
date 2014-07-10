@@ -1,6 +1,5 @@
-#add_subdirectory(cmdline_utils)
+add_subdirectory(cmdline_utils)
 add_subdirectory(concurrency)
-#add_subdirectory(mongoutils)
 add_subdirectory(net)
 add_subdirectory(options_parser)
 
