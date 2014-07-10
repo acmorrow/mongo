@@ -1,3 +1,4 @@
+add_subdirectory(stats)
 
 add_library(mongo_db_bson
   jsobj.cpp
@@ -18,12 +19,19 @@ add_library(mongo_db_lasterror
 
 target_link_libraries(mongo_db_lasterror
   mongo_util_foundation
-  mongo_util_network
+  mongo_util_net
+)
+
+add_library(mongo_db_message
+  dbmessage.cpp
 )
 
 add_library(mongo_db_server_options_core
   server_options.cpp
 )
 
-
-
+file (GLOB ch_files
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+)
+source_group(mongo\\db ch_files)

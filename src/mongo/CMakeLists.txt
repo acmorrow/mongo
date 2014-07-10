@@ -35,7 +35,7 @@ macro(mongo_cxx_unittest_crutch suite testname)
   mongo_cxx_unittest(${suite} ${testname})
   target_link_libraries(${testname}
     mongo_unittest_crutch
-    )
+  )
 endmacro()
 
 # NOTE: Keep these alphabetized
@@ -43,6 +43,7 @@ add_subdirectory(base)
 add_subdirectory(bson)
 add_subdirectory(client)
 add_subdirectory(db)
+add_subdirectory(dbtests)
 add_subdirectory(util)
 add_subdirectory(logger)
 add_subdirectory(platform)
