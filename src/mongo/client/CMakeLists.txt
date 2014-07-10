@@ -35,4 +35,4 @@ file (GLOB ch_files
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
-source_group(mongo\\client ch_files)
+source_group(mongo\\client FILES ${ch_files})

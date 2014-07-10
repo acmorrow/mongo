@@ -44,4 +44,4 @@ file (GLOB ch_files
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
-source_group(mongo\\util\\net ch_files)
+source_group(mongo\\util\\net FILES ${ch_files})
