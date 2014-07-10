@@ -14,6 +14,7 @@ add_library(mongo_base
   initializer.cpp
   initializer_context.cpp
   initializer_dependency_graph.cpp
+  validate_locale.cpp
   make_string_vector.cpp
   parse_number.cpp
   status.cpp
@@ -23,6 +24,20 @@ add_library(mongo_base
 target_link_libraries(mongo_base
   mongo_murmurhash3
 )
+
+macro(mongo_base_cxx_unittest testname)
+  mongo_cxx_unittest_crutch(base ${testname})
+  target_link_libraries(${testname} mongo_base)
+endmacro()
+
+mongo_base_cxx_unittest(counter_test)
+mongo_base_cxx_unittest(initializer_dependency_graph_test)
+mongo_base_cxx_unittest(initializer_test)
+mongo_base_cxx_unittest(owned_pointer_map_test)
+mongo_base_cxx_unittest(owned_pointer_vector_test)
+mongo_base_cxx_unittest(parse_number_test)
+mongo_base_cxx_unittest(status_test)
+mongo_base_cxx_unittest(string_data_test)
 
 file (GLOB ch_files
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp

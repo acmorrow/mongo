@@ -1,6 +1,7 @@
 
 add_library(mongo_util_options_parser
   constraints.cpp
+  environment.cpp
   option_description.cpp
   option_section.cpp
   options_parser.cpp
@@ -9,9 +10,17 @@ add_library(mongo_util_options_parser
   value.cpp
 )
 
+# TODO(acm), create or obtain FindYaml
+find_library(YamlCpp_LIBRARY
+  NAMES yaml-cpp
+)
+
 target_link_libraries(mongo_util_options_parser
   mongo_bson
-  yaml-cpp # TODO(acm); FindYaml
+  # TODO: Should just be program_options
+  ${Boost_LIBRARIES}
+  ${YamlCpp_LIBRARY}
+  ${PCRECPP_LIBRARY}
 )
 
 add_library(mongo_util_options_parser_init

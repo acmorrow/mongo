@@ -1,4 +1,8 @@
-find_package (Boost COMPONENTS filesystem system thread REQUIRED)
+find_package (Boost COMPONENTS filesystem program_options system thread REQUIRED)
+
+find_library(PCRECPP_LIBRARY
+  NAMES pcrecpp
+)
 
 add_definitions(-DMONGO_CMAKE_BUILD)
 add_definitions(-DMONGO_EXPOSE_MACROS)
