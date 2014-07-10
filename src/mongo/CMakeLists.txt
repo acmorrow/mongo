@@ -11,8 +11,8 @@ add_definitions(-DMONGO_EXPOSE_MACROS)
 add_definitions(-DMONGO_HAVE_EXECINFO_BACKTRACE)
 
 include_directories(${Boost_INCLUDE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_BINARY_DIR}/src)
+# include_directories(${PROJECT_SOURCE_DIR}/src)
+# include_directories(${PROJECT_BINARY_DIR}/src)
 
 macro(mongo_cxx_unittest suite testname)
   add_executable(${testname}

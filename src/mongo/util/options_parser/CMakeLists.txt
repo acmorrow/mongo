@@ -10,17 +10,14 @@ add_library(mongo_util_options_parser
   value.cpp
 )
 
-# TODO(acm), create or obtain FindYaml
-find_library(YamlCpp_LIBRARY
-  NAMES yaml-cpp
-)
+#include_directories(../../../third_party/yaml-cpp-0.5.1/include)
 
 target_link_libraries(mongo_util_options_parser
   mongo_bson
   # TODO: Should just be program_options
   ${Boost_LIBRARIES}
-  ${YamlCpp_LIBRARY}
-  ${PCRECPP_LIBRARY}
+  mongo_thirdparty_shim_yaml
+  mongo_thirdparty_shim_pcrecpp
 )
 
 add_library(mongo_util_options_parser_init
