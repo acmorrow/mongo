@@ -27,12 +27,22 @@ add_library(mongo-db-query-index-bounds
 )
 
 target_link_libraries(mongo-db-query-index-bounds
+  mongo-db-geoquery
+  mongo-db-hasher
   mongo-logger
   mongo-thirdparty-s2
 )
 
 add_library(mongo-db-query-lite-parsed-query
   lite_parsed_query.cpp
+)
+
+add_library(mongo-db-query-logger
+  qlog.cpp
+)
+
+target_link_libraries(mongo-db-query-logger
+  mongo-db-server-parameters
 )
 
 add_library(mongo-db-query-planner
@@ -54,5 +64,6 @@ target_link_libraries(mongo-db-query-planner
   mongo-db-index-names
   mongo-db-query-index-bounds
   mongo-db-query-lite-parsed-query
+  mongo-db-query-logger
 )
 

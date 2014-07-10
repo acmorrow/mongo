@@ -1,4 +1,5 @@
-#add_subdirectory(auth)
+add_subdirectory(auth)
+add_subdirectory(geo)
 add_subdirectory(matcher)
 add_subdirectory(ops)
 add_subdirectory(query)
@@ -30,8 +31,16 @@ add_library(mongo-db-global-optime
   global_optime.cpp
 )
 
+add_library(mongo-db-hasher
+  hasher.cpp
+)
+
 add_library(mongo-db-index-names
   index_names.cpp
+)
+
+add_library(mongo-db-index-set
+  index_set.cpp
 )
 
 add_library(mongo-db-json
@@ -53,6 +62,10 @@ add_library(mongo-db-message
 
 add_library(mongo-db-server-options-core
   server_options.cpp
+)
+
+add_library(mongo-db-server-parameters
+  server_parameters.cpp
 )
 
 file (GLOB ch_files

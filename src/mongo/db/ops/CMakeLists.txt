@@ -74,6 +74,7 @@ add_library(mongo-db-ops-update-driver
 )
 
 target_link_libraries(mongo-db-ops-update-driver
+  mongo-db-index-set
   mongo-db-ops-update
   mongo-db-query-planner
 )
