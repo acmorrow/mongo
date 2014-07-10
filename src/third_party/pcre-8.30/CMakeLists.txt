@@ -1,8 +1,8 @@
 
 add_definitions(-DHAVE_CONFIG_H)
-add_library(
-  mongo_thirdparty_pcrecpp
-   # pcre
+
+add_library(mongo-thirdparty-pcrecpp
+  # pcre
   pcre_byte_order.c
   pcre_compile.c
   pcre_config.c
@@ -36,4 +36,4 @@ file (GLOB ch_files
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
-source_group(pcrecpp ch_files)
+source_group(thirdparty\\pcrecpp FILES ${ch_files})

@@ -7,4 +7,4 @@ file (GLOB ch_files
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
 )
-source_group(mongo_thirdparty_yaml ch_files)
+source_group(third_party\\yaml FILES ${ch_files})

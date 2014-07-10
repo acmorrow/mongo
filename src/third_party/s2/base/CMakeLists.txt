@@ -1,5 +1,5 @@
 
-add_library(mongo_thirdparty_s2_base
+add_library(mongo-thirdparty-s2-base
   int128.cc
   logging.cc
   strtoint.cc
@@ -11,6 +11,4 @@ file (GLOB ch_files
   ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
 
-source_group(mongo_thirdparty_s2_base
-  ch_files
-)
+source_group(third_party\\s2\\base FILES ${ch_files})

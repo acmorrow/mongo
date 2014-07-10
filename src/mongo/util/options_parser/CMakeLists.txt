@@ -1,5 +1,5 @@
 
-add_library(mongo_util_options_parser
+add_library(mongo-util-options-parser
   constraints.cpp
   environment.cpp
   option_description.cpp
@@ -10,20 +10,18 @@ add_library(mongo_util_options_parser
   value.cpp
 )
 
-#include_directories(../../../third_party/yaml-cpp-0.5.1/include)
-
-target_link_libraries(mongo_util_options_parser
-  mongo_bson
+target_link_libraries(mongo-util-options-parser
+  mongo-bson
   # TODO: Should just be program_options
   ${Boost_LIBRARIES}
-  mongo_thirdparty_shim_yaml
-  mongo_thirdparty_shim_pcrecpp
+  mongo-thirdparty-shim-yaml
+  mongo-thirdparty-shim-pcrecpp
 )
 
-add_library(mongo_util_options_parser_init
+add_library(mongo-util-options-parser-init
   options_parser_init.cpp
 )
 
-target_link_libraries(mongo_util_options_parser_init
-  mongo_util_options_parser
+target_link_libraries(mongo-util-options-parser-init
+  mongo-util-options-parser
 )

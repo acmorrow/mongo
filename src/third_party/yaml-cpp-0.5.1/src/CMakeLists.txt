@@ -1,4 +1,4 @@
-add_library(mongo_thirdparty_yaml
+add_library(mongo-thirdparty-yaml
   binary.cpp
   graphbuilder.cpp
   graphbuilderadapter.cpp
@@ -29,3 +29,10 @@ add_library(mongo_thirdparty_yaml
   stream.cpp
   tag.cpp
 )
+
+file (GLOB ch_files
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+)
+
+source_group(third_party\\yaml-cpp FILES ${ch_files})

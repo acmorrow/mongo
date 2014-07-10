@@ -1,24 +1,24 @@
-add_library(mongo_bson_mutable
+add_library(mongo-bson-mutable
   element.cpp
   document.cpp)
 
-target_link_libraries(mongo_bson_mutable
-  mongo_base
-  mongo_bson
-  mongo_util_safenum
+target_link_libraries(mongo-bson-mutable
+  mongo-base
+  mongo-bson
+  mongo-util-safenum
 )
 
-add_library(mongo_mutable_bson_test_utils
+add_library(mongo-bson-mutable-test-utils
   mutable_bson_test_utils.cpp
 )
 
-target_link_libraries(mongo_mutable_bson_test_utils
-  mongo_bson_mutable
+target_link_libraries(mongo-bson-mutable-test-utils
+  mongo-bson-mutable
 )
 
 macro(mongo_bson_mutable_cxx_unittest testname)
   mongo_cxx_unittest_crutch(bson/mutable ${testname})
-  target_link_libraries(${testname} mongo_mutable_bson_test_utils mongo_bson_mutable)
+  target_link_libraries(${testname} mongo-bson-mutable-test-utils mongo-bson-mutable)
 endmacro()
 
 mongo_bson_mutable_cxx_unittest(mutable_bson_algo_test)

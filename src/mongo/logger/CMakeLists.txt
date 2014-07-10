@@ -1,4 +1,4 @@
-add_library(mongo_logger
+add_library(mongo-logger
   console.cpp
   log_manager.cpp
   log_severity.cpp
@@ -14,14 +14,14 @@ add_library(mongo_logger
   rotatable_file_writer.cpp
 )
 
-target_link_libraries(mongo_logger
-  mongo_base
-  mongo_util_concurrency_threadname
+target_link_libraries(mongo-logger
+  mongo-base
+  mongo-util-concurrency-threadname
 )
 
 macro(mongo_bson_logger_unittest testname)
   mongo_cxx_unittest_crutch(logger ${testname})
-  target_link_libraries(${testname} mongo_logger)
+  target_link_libraries(${testname} mongo-logger)
 endmacro()
 
 mongo_bson_logger_unittest(console_test)

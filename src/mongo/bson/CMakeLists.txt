@@ -1,20 +1,20 @@
 add_subdirectory(util)
 add_subdirectory(mutable)
 
-add_library(mongo_bson
+add_library(mongo-bson
   oid.cpp
   optime.cpp
   bson_validate.cpp
 )
 
-target_link_libraries(mongo_bson
-  mongo_platform
-  mongo_util_foundation
+target_link_libraries(mongo-bson
+  mongo-platform
+  mongo-util-foundation
 )
 
 macro(mongo_bson_cxx_unittest testname)
   mongo_cxx_unittest_crutch(bson ${testname})
-  target_link_libraries(${testname} mongo_bson)
+  target_link_libraries(${testname} mongo-bson)
 endmacro()
 
 mongo_bson_cxx_unittest(bson_field_test)

@@ -1,22 +1,22 @@
-add_library(mongo_unittest
+add_library(mongo-unittest
   temp_dir.cpp
   unittest.cpp
 )
 
-target_link_libraries(mongo_unittest
-  mongo_util_foundation
+target_link_libraries(mongo-unittest
+  mongo-util-foundation
 )
 
-add_library(mongo_unittest_main
+add_library(mongo-unittest-main
   unittest_main.cpp
 )
 
-target_link_libraries(mongo_unittest_main
-  mongo_base
-  mongo_unittest
+target_link_libraries(mongo-unittest-main
+  mongo-base
+  mongo-unittest
 )
 
-add_library(mongo_unittest_crutch
+add_library(mongo-unittest-crutch
   crutch.cpp
 )
 

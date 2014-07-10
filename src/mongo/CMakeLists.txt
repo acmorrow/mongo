@@ -13,7 +13,7 @@ macro(mongo_cxx_unittest suite testname)
     ${testname}.cpp
   )
   target_link_libraries(${testname}
-    mongo_unittest_main
+    mongo-unittest-main
     ${Boost_LIBRARIES}
   )
   add_test(
@@ -25,7 +25,7 @@ endmacro()
 macro(mongo_cxx_unittest_crutch suite testname)
   mongo_cxx_unittest(${suite} ${testname})
   target_link_libraries(${testname}
-    mongo_unittest_crutch
+    mongo-unittest-crutch
   )
 endmacro()
 

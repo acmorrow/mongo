@@ -1,5 +1,5 @@
 
-add_library(mongo_db_stats_counters
+add_library(mongo-db-stats-counters
   counters.cpp
 )
 

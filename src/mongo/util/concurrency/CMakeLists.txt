@@ -1,19 +1,19 @@
 
-add_library(mongo_util_concurrency_spinlock
+add_library(mongo-util-concurrency-spinlock
   spin_lock.cpp
 )
 
-add_library(mongo_util_concurrency_threadname
+add_library(mongo-util-concurrency-threadname
   thread_name.cpp
 )
 
-target_link_libraries(mongo_util_concurrency_threadname
-  mongo_base
+target_link_libraries(mongo-util-concurrency-threadname
+  mongo-base
 )
 
 macro(mongo_util_concurrency_unittest testname)
   mongo_cxx_unittest_crutch(util/concurrency ${testname})
-  target_link_libraries(${testname} mongo_util_concurrency_spinlock)
+  target_link_libraries(${testname} mongo-util-concurrency-spinlock)
 endmacro()
 
 mongo_util_concurrency_unittest(spin_lock_test)

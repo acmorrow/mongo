@@ -1,4 +1,4 @@
-add_library(mongo_platform
+add_library(mongo-platform
   backtrace.cpp
   posix_fadvise.cpp
   process_id
@@ -8,7 +8,7 @@ add_library(mongo_platform
 
 macro(mongo_platform_cxx_unittest testname)
   mongo_cxx_unittest_crutch(platform ${testname})
-  target_link_libraries(${testname} mongo_platform)
+  target_link_libraries(${testname} mongo-platform)
 endmacro()
 
 mongo_platform_cxx_unittest(atomic_word_test)

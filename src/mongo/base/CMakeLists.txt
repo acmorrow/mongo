@@ -5,7 +5,7 @@ add_custom_command(
     COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/generate_error_codes.py ${CMAKE_CURRENT_SOURCE_DIR}/error_codes.err ${CMAKE_CURRENT_BINARY_DIR}/error_codes.h ${CMAKE_CURRENT_BINARY_DIR}/error_codes.cpp
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/generate_error_codes.py ${CMAKE_CURRENT_SOURCE_DIR}/error_codes.err)
 
-add_library(mongo_base
+add_library(mongo-base
   error_codes.h
   error_codes.cpp
   global_initializer.cpp
@@ -21,13 +21,13 @@ add_library(mongo_base
   string_data.cpp
 )
 
-target_link_libraries(mongo_base
-  mongo_murmurhash3
+target_link_libraries(mongo-base
+  mongo-thirdparty-murmurhash3
 )
 
 macro(mongo_base_cxx_unittest testname)
   mongo_cxx_unittest_crutch(base ${testname})
-  target_link_libraries(${testname} mongo_base)
+  target_link_libraries(${testname} mongo-base)
 endmacro()
 
 mongo_base_cxx_unittest(counter_test)

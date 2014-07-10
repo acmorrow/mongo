@@ -1,7 +1,11 @@
+add_subdirectory(base)
+add_subdirectory(strings)
+add_subdirectory(util/coding)
+add_subdirectory(util/math)
 
 add_definitions(-DDEBUG_MODE=false)
 
-add_library(mongo_thirdparty_s2
+add_library(mongo-thirdparty-s2
   s1angle.cc
   s2.cc
   s2cellid.cc
@@ -25,11 +29,11 @@ add_library(mongo_thirdparty_s2
   s2regionunion.cc
 )
 
-target_link_libraries(mongo_thirdparty_s2
-  mongo_thirdparty_s2_base
-  mongo_thirdparty_s2_strings
-  mongo_thirdparty_s2_util_math
-  mongo_thirdparty_s2_util_coding
+target_link_libraries(mongo-thirdparty-s2
+  mongo-thirdparty-s2-base
+  mongo-thirdparty-s2-strings
+  mongo-thirdparty-s2-util-math
+  mongo-thirdparty-s2-util-coding
 )
 
 file (GLOB ch_files
@@ -37,6 +41,4 @@ file (GLOB ch_files
   ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
 
-source_group(mongo_thirdparty_s2
-  ch_files
-)
+source_group(third_party\\s2 FILES ${ch_files})

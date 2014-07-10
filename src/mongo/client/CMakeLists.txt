@@ -1,5 +1,5 @@
 
-add_library(mongo_client
+add_library(mongo-client
   connpool.cpp
   dbclient.cpp
   dbclient_rs.cpp
@@ -9,25 +9,25 @@ add_library(mongo_client
   syncclusterconnection.cpp
 )
 
-target_link_libraries(mongo_client
-  mongo_bson_util
-  mongo_db_message
-  mongo_util_net
-  mongo_util_net_message_server_port
+target_link_libraries(mongo-client
+  mongo-bson-util
+  mongo-db-message
+  mongo-util-net
+  mongo-util-net-message-server-port
 )
 
 macro(mongo_client_unittest testname)
   mongo_cxx_unittest(client ${testname})
-  target_link_libraries(${testname} mongo_client mongo_dbtests_mock)
+  target_link_libraries(${testname} mongo-client mongo-dbtests-mock)
 endmacro()
 
 mongo_client_unittest(dbclient_rs_test)
 target_link_libraries(dbclient_rs_test
-  mongo_unittest_crutch)
+  mongo-unittest-crutch)
 
 mongo_client_unittest(replica_set_monitor_test)
 target_link_libraries(replica_set_monitor_test
-  mongo_unittest_crutch)
+  mongo-unittest-crutch)
 
 mongo_client_unittest(scoped_db_conn_test)
 

@@ -1,33 +1,57 @@
-add_subdirectory(auth)
+#add_subdirectory(auth)
+add_subdirectory(matcher)
+add_subdirectory(ops)
+add_subdirectory(query)
 add_subdirectory(stats)
 
-add_library(mongo_db_bson
+add_library(mongo-db-bson
   jsobj.cpp
 )
 
-target_link_libraries(mongo_db_bson
-  mongo_db_json
-  mongo_util_md5
+target_link_libraries(mongo-db-bson
+  mongo-db-json
+  mongo-util-md5
 )
 
-add_library(mongo_db_json
+add_library(mongo-db-common
+  field_ref.cpp
+  field_ref_set.cpp
+  field_parser.cpp
+  write_concern_options.cpp
+)
+
+target_link_libraries(mongo-db-common
+  mongo-bson
+  mongo-bson-util
+  mongo-util-foundation
+)
+
+add_library(mongo-db-global-optime
+  global_optime.cpp
+)
+
+add_library(mongo-db-index-names
+  index_names.cpp
+)
+
+add_library(mongo-db-json
   json.cpp
 )
 
-add_library(mongo_db_lasterror
+add_library(mongo-db-lasterror
   lasterror.cpp
 )
 
-target_link_libraries(mongo_db_lasterror
-  mongo_util_foundation
-  mongo_util_net
+target_link_libraries(mongo-db-lasterror
+  mongo-util-foundation
+  mongo-util-net
 )
 
-add_library(mongo_db_message
+add_library(mongo-db-message
   dbmessage.cpp
 )
 
-add_library(mongo_db_server_options_core
+add_library(mongo-db-server-options-core
   server_options.cpp
 )
 

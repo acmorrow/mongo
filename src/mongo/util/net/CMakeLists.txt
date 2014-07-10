@@ -1,5 +1,5 @@
 
-add_library(mongo_util_net
+add_library(mongo-util-net
   httpclient.cpp
   listen.cpp
   message.cpp
@@ -10,31 +10,31 @@ add_library(mongo_util_net
   ssl_options.cpp
 )
 
-target_link_libraries(mongo_util_net
-  mongo_db_server_options_core
-  mongo_util_background_job
-  mongo_util_concurrency_spinlock
-  mongo_util_failpoint
-  mongo_util_net_hostandport
-  mongo_util_options_parser
+target_link_libraries(mongo-util-net
+  mongo-db-server-options-core
+  mongo-util-background-job
+  mongo-util-concurrency-spinlock
+  mongo-util-failpoint
+  mongo-util-net-hostandport
+  mongo-util-options-parser
 )
 
-add_library(mongo_util_net_hostandport
+add_library(mongo-util-net-hostandport
   hostandport.cpp
 )
 
-add_library(mongo_util_net_message_server_port
+add_library(mongo-util-net-message-server-port
   message_server_port.cpp
 )
 
-target_link_libraries(mongo_util_net_message_server_port
-  mongo_util_net
-  mongo_db_stats_counters
+target_link_libraries(mongo-util-net-message-server-port
+  mongo-util-net
+  mongo-db-stats-counters
 )
 
 macro(mongo_util_net_unittest testname)
   mongo_cxx_unittest_crutch(util/net ${testname})
-  target_link_libraries(${testname} mongo_util_net mongo_util_net_hostandport)
+  target_link_libraries(${testname} mongo-util-net mongo-util-net-hostandport)
 endmacro()
 
 mongo_util_net_unittest(hostandport_test)

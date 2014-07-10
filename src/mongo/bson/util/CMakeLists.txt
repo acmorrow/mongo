@@ -1,14 +1,14 @@
-add_library(mongo_bson_util
+add_library(mongo-bson-util
   bson_extract.cpp
 )
 
-target_link_libraries(mongo_bson_util
-  mongo_util_foundation
+target_link_libraries(mongo-bson-util
+  mongo-util-foundation
 )
 
 macro(mongo_bson_util_cxx_unittest testname)
   mongo_cxx_unittest_crutch(bson/util ${testname})
-  target_link_libraries(${testname} mongo_bson_util)
+  target_link_libraries(${testname} mongo-bson-util)
 endmacro()
 
 mongo_bson_util_cxx_unittest(bson_check_test)
