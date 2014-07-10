@@ -1,3 +1,4 @@
+add_subdirectory(auth)
 add_subdirectory(stats)
 
 add_library(mongo_db_bson
