@@ -10,9 +10,6 @@ add_definitions(-DMONGO_EXPOSE_MACROS)
 # TODO(acm): Should be a configure test, or a Find...
 add_definitions(-DMONGO_HAVE_EXECINFO_BACKTRACE)
 
-# TODO(acm): Need a way to pass in auxiliary include and library search paths
-set(CMAKE_LIBRARY_PATH "${CMAKE_LIBRARY_PATH} /opt/local/lib")
-
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src)
