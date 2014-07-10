@@ -47,6 +47,10 @@ add_library(mongo_util_md5
   password_digest.cpp
 )
 
+add_library(mongo_util_safenum
+  safe_num.cpp
+)
+
 # TODO: Add Windows support
 add_library(mongo_util_stacktrace
   stacktrace_posix.cpp
