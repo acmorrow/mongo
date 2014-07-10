@@ -19,6 +19,15 @@ target_link_libraries(mongo_logger
   mongo_util_concurrency_threadname
 )
 
+macro(mongo_bson_logger_unittest testname)
+  mongo_cxx_unittest_crutch(logger ${testname})
+  target_link_libraries(${testname} mongo_logger)
+endmacro()
+
+mongo_bson_logger_unittest(console_test)
+mongo_bson_logger_unittest(log_test)
+mongo_bson_logger_unittest(rotatable_file_writer_test)
+
 file (GLOB ch_files
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h

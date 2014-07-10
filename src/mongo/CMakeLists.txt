@@ -41,7 +41,7 @@ endmacro()
 # NOTE: Keep these alphabetized
 add_subdirectory(base)
 add_subdirectory(bson)
-#add_subdirectory(client)
+add_subdirectory(client)
 add_subdirectory(db)
 add_subdirectory(util)
 add_subdirectory(logger)
