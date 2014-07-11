@@ -9,12 +9,31 @@ set(mongodb_version_extra -pre)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/lib/cmake)
 
-# TODO: -Wl,--whole-archive on non OS X
-set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-all_load")
+if(WIN32)
+  add_compile_options(
+    /EHsc
+    /W3
+    /wd4355
+    /wd4800
+    /wd4267
+    /wd4244
+    /wd4290
+    /wd4099
+  )
 
-add_compile_options(
-  -Wno-deprecated-declarations
-)
+  add_definitions(
+    /D_CONSOLE
+    /D_CRT_SECURE_NO_WARNINGS
+    /D_UNICODE
+    /DUNICODE
+  )
+else()
+  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-all_load")
+
+  add_compile_options(
+    -Wno-deprecated-declarations
+  )
+endif()
 
 enable_testing()
 add_subdirectory(src)

@@ -1,3 +1,7 @@
+if(WIN32)
+  set(Boost_USE_STATIC_LIBS ON)
+  add_definitions(-DBOOST_ALL_NO_LIB)
+endif()
 find_package (Boost COMPONENTS filesystem program_options system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
@@ -14,11 +18,18 @@ add_custom_target(mongo_generate)
 
 function(add_mongo_library library)
   add_library(${library} ${ARGN})
+  target_link_libraries(${library} ${Boost_LIBRARIES})
+  if(WIN32)
+    target_link_libraries(${library} ws2_32 dbghelp)
+  endif()
   add_dependencies(${library} mongo_generate)
 endfunction()
 
 function(add_mongo_executable executable)
   add_executable(${executable} ${ARGN})
+  if(WIN32)
+    target_link_libraries(${executable} ws2_32 dbghelp)
+  endif()
   add_dependencies(${executable} mongo_generate)
 endfunction()
 

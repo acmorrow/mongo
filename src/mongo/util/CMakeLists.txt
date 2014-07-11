@@ -50,10 +50,15 @@ add_mongo_library(mongo-util-safenum
   safe_num.cpp
 )
 
-# TODO: Add Windows support
-add_mongo_library(mongo-util-stacktrace
-  stacktrace_posix.cpp
-)
+if(WIN32)
+  add_library(mongo-util-stacktrace
+    stacktrace_win.cpp
+  )
+else()
+  add_library(mongo-util-stacktrace
+    stacktrace_posix.cpp
+  )
+endif()
 
 target_link_libraries(mongo-util-stacktrace
   mongo-base
