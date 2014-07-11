@@ -3,6 +3,10 @@ add_mongo_library(mongo-util-concurrency-spinlock
   spin_lock.cpp
 )
 
+add_mongo_library(mongo-util-concurrency-mutex
+  mutexdebugger.cpp
+)
+
 add_mongo_library(mongo-util-concurrency-threadname
   thread_name.cpp
 )

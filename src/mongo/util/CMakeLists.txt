@@ -37,6 +37,7 @@ target_link_libraries(mongo-util-foundation
   mongo-base
   mongo-db-lasterror
   mongo-logger
+  mongo-util-concurrency-mutex
   mongo-util-concurrency-threadname
   mongo-util-stacktrace
 )
