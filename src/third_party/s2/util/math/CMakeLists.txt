@@ -1,5 +1,5 @@
 
-add_library(mongo-thirdparty-s2-util-math
+add_mongo_library(mongo-thirdparty-s2-util-math
   mathutil.cc
 )
 

@@ -1,5 +1,5 @@
 
-add_library(mongo-thirdparty-s2-strings
+add_mongo_library(mongo-thirdparty-s2-strings
   split.cc
   stringprintf.cc
   strutil.cc

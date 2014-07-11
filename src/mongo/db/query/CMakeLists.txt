@@ -1,4 +1,4 @@
-add_library(mongo-db-query
+add_mongo_library(mongo-db-query
   eof_runner.cpp
   explain.cpp
   explain_plan.cpp
@@ -20,7 +20,7 @@ target_link_libraries(mongo-db-query
   mongo-db-auth-core
 )
 
-add_library(mongo-db-query-index-bounds
+add_mongo_library(mongo-db-query-index-bounds
   index_bounds.cpp
   index_bounds_builder.cpp
   interval.cpp
@@ -33,11 +33,11 @@ target_link_libraries(mongo-db-query-index-bounds
   mongo-thirdparty-s2
 )
 
-add_library(mongo-db-query-lite-parsed-query
+add_mongo_library(mongo-db-query-lite-parsed-query
   lite_parsed_query.cpp
 )
 
-add_library(mongo-db-query-logger
+add_mongo_library(mongo-db-query-logger
   qlog.cpp
 )
 
@@ -45,7 +45,7 @@ target_link_libraries(mongo-db-query-logger
   mongo-db-server-parameters
 )
 
-add_library(mongo-db-query-planner
+add_mongo_library(mongo-db-query-planner
   canonical_query.cpp
   query_settings.cpp
   index_tag.cpp

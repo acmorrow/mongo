@@ -1,5 +1,5 @@
 
-add_library(mongo-util-net
+add_mongo_library(mongo-util-net
   httpclient.cpp
   listen.cpp
   message.cpp
@@ -19,11 +19,11 @@ target_link_libraries(mongo-util-net
   mongo-util-options-parser
 )
 
-add_library(mongo-util-net-hostandport
+add_mongo_library(mongo-util-net-hostandport
   hostandport.cpp
 )
 
-add_library(mongo-util-net-message-server-port
+add_mongo_library(mongo-util-net-message-server-port
   message_server_port.cpp
 )
 

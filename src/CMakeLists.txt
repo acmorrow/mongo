@@ -10,5 +10,17 @@ include_directories(${PROJECT_BINARY_DIR}/src)
 
 add_definitions(-DMONGO_EXPOSE_MACROS)
 
+add_custom_target(mongo_generate)
+
+function(add_mongo_library library)
+  add_library(${library} ${ARGN})
+  add_dependencies(${library} mongo_generate)
+endfunction()
+
+function(add_mongo_executable executable)
+  add_executable(${executable} ${ARGN})
+  add_dependencies(${executable} mongo_generate)
+endfunction()
+
 add_subdirectory(third_party)
 add_subdirectory(mongo)

@@ -1,4 +1,4 @@
-add_library(mongo-logger
+add_mongo_library(mongo-logger
   console.cpp
   log_manager.cpp
   log_severity.cpp

@@ -1,5 +1,5 @@
 
-add_library(mongo-client
+add_mongo_library(mongo-client
   connpool.cpp
   dbclient.cpp
   dbclient_rs.cpp

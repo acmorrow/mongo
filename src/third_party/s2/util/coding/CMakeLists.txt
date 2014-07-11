@@ -1,5 +1,5 @@
 
-add_library(mongo-thirdparty-s2-util-coding
+add_mongo_library(mongo-thirdparty-s2-util-coding
   coder.cc
   varint.cc
 )

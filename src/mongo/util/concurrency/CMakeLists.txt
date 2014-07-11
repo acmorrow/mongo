@@ -1,9 +1,9 @@
 
-add_library(mongo-util-concurrency-spinlock
+add_mongo_library(mongo-util-concurrency-spinlock
   spin_lock.cpp
 )
 
-add_library(mongo-util-concurrency-threadname
+add_mongo_library(mongo-util-concurrency-threadname
   thread_name.cpp
 )
 

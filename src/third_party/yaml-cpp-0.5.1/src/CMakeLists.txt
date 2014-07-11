@@ -1,4 +1,4 @@
-add_library(mongo-thirdparty-yaml
+add_mongo_library(mongo-thirdparty-yaml
   binary.cpp
   graphbuilder.cpp
   graphbuilderadapter.cpp

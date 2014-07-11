@@ -1,5 +1,5 @@
 
-add_library(mongo-thirdparty-snappy
+add_mongo_library(mongo-thirdparty-snappy
   snappy.cc
 )
 

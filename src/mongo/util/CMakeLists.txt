@@ -3,11 +3,11 @@ add_subdirectory(concurrency)
 add_subdirectory(net)
 add_subdirectory(options_parser)
 
-add_library(mongo-util-background-job
+add_mongo_library(mongo-util-background-job
   background.cpp
 )
 
-add_library(mongo-util-failpoint
+add_mongo_library(mongo-util-failpoint
   fail_point.cpp
   fail_point_registry.cpp
   fail_point_service.cpp
@@ -18,7 +18,7 @@ target_link_libraries(mongo-util-failpoint
   mongo-util-foundation
 )
 
-add_library(mongo-util-foundation
+add_mongo_library(mongo-util-foundation
    assert_util.cpp
    debug_util.cpp
    exception_filter_win32.cpp
@@ -41,17 +41,17 @@ target_link_libraries(mongo-util-foundation
   mongo-util-stacktrace
 )
 
-add_library(mongo-util-md5
+add_mongo_library(mongo-util-md5
   md5.cpp
   password_digest.cpp
 )
 
-add_library(mongo-util-safenum
+add_mongo_library(mongo-util-safenum
   safe_num.cpp
 )
 
 # TODO: Add Windows support
-add_library(mongo-util-stacktrace
+add_mongo_library(mongo-util-stacktrace
   stacktrace_posix.cpp
 )
 
@@ -63,13 +63,13 @@ target_link_libraries(mongo-util-stacktrace
   mongo-util-version
 )
 
-add_library(mongo-util-strings
+add_mongo_library(mongo-util-strings
   base64.cpp
   hex.cpp
   stringutils.cpp
 )
 
-add_library(mongo-util-version
+add_mongo_library(mongo-util-version
   version.cpp
 )
 

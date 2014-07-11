@@ -1,7 +1,7 @@
 add_subdirectory(util)
 add_subdirectory(mutable)
 
-add_library(mongo-bson
+add_mongo_library(mongo-bson
   oid.cpp
   optime.cpp
   bson_validate.cpp

@@ -1,4 +1,4 @@
-add_library(mongo-bson-mutable
+add_mongo_library(mongo-bson-mutable
   element.cpp
   document.cpp)
 
@@ -8,7 +8,7 @@ target_link_libraries(mongo-bson-mutable
   mongo-util-safenum
 )
 
-add_library(mongo-bson-mutable-test-utils
+add_mongo_library(mongo-bson-mutable-test-utils
   mutable_bson_test_utils.cpp
 )
 

@@ -1,4 +1,4 @@
-add_library(mongo-db-catalog
+add_mongo_library(mongo-db-catalog
   collection.cpp
   collection_cursor_cache.cpp
   collection_info_cache.cpp
@@ -9,7 +9,7 @@ add_library(mongo-db-catalog
   index_create.cpp
 )
 
-add_library(mongo-db-catalog-collection-options
+add_mongo_library(mongo-db-catalog-collection-options
   collection_options.cpp
 )
 

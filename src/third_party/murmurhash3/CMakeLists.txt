@@ -1,5 +1,5 @@
 
-add_library(mongo-thirdparty-murmurhash3
+add_mongo_library(mongo-thirdparty-murmurhash3
   murmurhash3.cpp)
 
 file (GLOB ch_files

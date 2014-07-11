@@ -5,9 +5,16 @@ add_custom_command(
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_error_codes.py ${CMAKE_CURRENT_SOURCE_DIR}/error_codes.err ${CMAKE_CURRENT_BINARY_DIR}/error_codes.h ${CMAKE_CURRENT_BINARY_DIR}/error_codes.cpp
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/generate_error_codes.py ${CMAKE_CURRENT_SOURCE_DIR}/error_codes.err)
 
-add_library(mongo-base
-  error_codes.h
-  error_codes.cpp
+add_custom_target(mongo-base-generate DEPENDS
+  ${CMAKE_CURRENT_BINARY_DIR}/action_type.h
+  ${CMAKE_CURRENT_BINARY_DIR}/action_type.cpp
+)
+
+add_dependencies(mongo_generate mongo-base-generate)
+
+add_mongo_library(mongo-base
+  ${CMAKE_CURRENT_BINARY_DIR}/error_codes.h
+  ${CMAKE_CURRENT_BINARY_DIR}/error_codes.cpp
   global_initializer.cpp
   global_initializer_registerer.cpp
   init.cpp

@@ -5,7 +5,7 @@ add_subdirectory(util/math)
 
 add_definitions(-DDEBUG_MODE=false)
 
-add_library(mongo-thirdparty-s2
+add_mongo_library(mongo-thirdparty-s2
   s1angle.cc
   s2.cc
   s2cellid.cc

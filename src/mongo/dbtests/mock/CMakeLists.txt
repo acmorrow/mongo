@@ -1,5 +1,5 @@
 
-add_library(mongo-dbtests-mock
+add_mongo_library(mongo-dbtests-mock
   mock_conn_registry.cpp
   mock_dbclient_connection.cpp
   mock_dbclient_cursor.cpp

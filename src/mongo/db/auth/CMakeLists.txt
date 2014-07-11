@@ -6,9 +6,16 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/generate_action_types.py ${CMAKE_CURRENT_SOURCE_DIR}/action_types.txt
 )
 
-add_library(mongo-db-auth-core
-  action_type.h
-  action_type.cpp
+add_custom_target(mongo-db-auth-generate DEPENDS
+  ${CMAKE_CURRENT_BINARY_DIR}/action_type.h
+  ${CMAKE_CURRENT_BINARY_DIR}/action_type.cpp
+)
+
+add_dependencies(mongo_generate mongo-db-auth-generate)
+
+add_mongo_library(mongo-db-auth-core
+  ${CMAKE_CURRENT_BINARY_DIR}/action_type.h
+  ${CMAKE_CURRENT_BINARY_DIR}/action_type.cpp
   authorization_manager.cpp
   authorization_session.cpp
   authz_documents_update_guard.cpp
@@ -35,11 +42,11 @@ target_link_libraries(mongo-db-auth-core
   mongo-db-ops-update-driver
 )
 
-add_library(mongo-db-auth-mocks
+add_mongo_library(mongo-db-auth-mocks
   authz_manager_external_state_mock.cpp
 )
 
-add_library(mongo-db-auth-mongod
+add_mongo_library(mongo-db-auth-mongod
   authz_manager_external_state_d.cpp
   authz_session_external_state_d.cpp
   auth_index_d.cpp
@@ -50,7 +57,7 @@ target_link_libraries(mongo-db-auth-mongod
   mongo-db-server-options-core
 )
 
-add_library(mongo-db-auth-mongos
+add_mongo_library(mongo-db-auth-mongos
   authz_manager_external_state_s.cpp
   authz_session_external_state_s.cpp
   user_cache_invalidator_job.cpp
@@ -60,7 +67,7 @@ target_link_libraries(mongo-db-auth-mongos
   mongodb-auth-server-common
 )
 
-add_library(mongo-db-auth-server-common
+add_mongo_library(mongo-db-auth-server-common
   authorization_manager_global.cpp
   authz_session_external_state_server_common.cpp
   mechanism_scram.cpp
@@ -72,7 +79,7 @@ target_link_libraries(mongo-db-auth-server-common
   mongo-db-auth-core
 )
 
-add_library(mongo-db-auth-server
+add_mongo_library(mongo-db-auth-server
   mongo_authentication_session.cpp
 )
 

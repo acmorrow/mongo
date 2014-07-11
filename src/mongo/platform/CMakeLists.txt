@@ -1,4 +1,4 @@
-add_library(mongo-platform
+add_mongo_library(mongo-platform
   backtrace.cpp
   posix_fadvise.cpp
   process_id

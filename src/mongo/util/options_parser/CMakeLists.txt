@@ -1,5 +1,5 @@
 
-add_library(mongo-util-options-parser
+add_mongo_library(mongo-util-options-parser
   constraints.cpp
   environment.cpp
   option_description.cpp
@@ -18,7 +18,7 @@ target_link_libraries(mongo-util-options-parser
   mongo-thirdparty-shim-pcrecpp
 )
 
-add_library(mongo-util-options-parser-init
+add_mongo_library(mongo-util-options-parser-init
   options_parser_init.cpp
 )
 

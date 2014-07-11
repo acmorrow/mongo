@@ -1,5 +1,5 @@
 
-add_library(mongo-thirdparty-s2-base
+add_mongo_library(mongo-thirdparty-s2-base
   int128.cc
   logging.cc
   strtoint.cc

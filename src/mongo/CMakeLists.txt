@@ -7,7 +7,7 @@ add_definitions(-DMONGO_EXPOSE_MACROS)
 add_definitions(-DMONGO_HAVE_EXECINFO_BACKTRACE)
 
 macro(mongo_cxx_unittest suite testname)
-  add_executable(${testname}
+  add_mongo_executable(${testname}
     ${testname}.cpp
   )
   target_link_libraries(${testname}

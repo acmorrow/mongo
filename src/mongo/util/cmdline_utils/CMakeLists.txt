@@ -1,4 +1,4 @@
-add_library(mongo-util-cmdline-utils
+add_mongo_library(mongo-util-cmdline-utils
   censor_cmdline.cpp
 )
 

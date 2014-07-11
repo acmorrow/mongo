@@ -1,7 +1,7 @@
 
 add_definitions(-DHAVE_CONFIG_H)
 
-add_library(mongo-thirdparty-pcrecpp
+add_mongo_library(mongo-thirdparty-pcrecpp
   # pcre
   pcre_byte_order.c
   pcre_compile.c

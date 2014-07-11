@@ -1,4 +1,4 @@
-add_library(mongo-db-matcher-expressions
+add_mongo_library(mongo-db-matcher-expressions
   expression.cpp
   expression_array.cpp
   expression_leaf.cpp
@@ -15,17 +15,17 @@ target_link_libraries(mongo-db-matcher-expressions
   mongo-thirdparty-shim-pcrecpp
 )
 
-add_library(mongo-db-matcher-expressions-geo
+add_mongo_library(mongo-db-matcher-expressions-geo
   expression_geo.cpp
   expression_parser_geo.cpp
 )
 
-add_library(mongo-db-matcher-expressions-text
+add_mongo_library(mongo-db-matcher-expressions-text
   expression_text.cpp
   expression_parser_text.cpp
 )
 
-add_library(mongo-db-matcher-path
+add_mongo_library(mongo-db-matcher-path
   path.cpp
   path_internal.cpp
 )

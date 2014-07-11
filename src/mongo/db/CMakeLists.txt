@@ -6,7 +6,7 @@ add_subdirectory(ops)
 add_subdirectory(query)
 add_subdirectory(stats)
 
-add_library(mongo-db-bson
+add_mongo_library(mongo-db-bson
   jsobj.cpp
 )
 
@@ -15,7 +15,7 @@ target_link_libraries(mongo-db-bson
   mongo-util-md5
 )
 
-add_library(mongo-db-common
+add_mongo_library(mongo-db-common
   field_ref.cpp
   field_ref_set.cpp
   field_parser.cpp
@@ -28,27 +28,27 @@ target_link_libraries(mongo-db-common
   mongo-util-foundation
 )
 
-add_library(mongo-db-global-optime
+add_mongo_library(mongo-db-global-optime
   global_optime.cpp
 )
 
-add_library(mongo-db-hasher
+add_mongo_library(mongo-db-hasher
   hasher.cpp
 )
 
-add_library(mongo-db-index-names
+add_mongo_library(mongo-db-index-names
   index_names.cpp
 )
 
-add_library(mongo-db-index-set
+add_mongo_library(mongo-db-index-set
   index_set.cpp
 )
 
-add_library(mongo-db-json
+add_mongo_library(mongo-db-json
   json.cpp
 )
 
-add_library(mongo-db-lasterror
+add_mongo_library(mongo-db-lasterror
   lasterror.cpp
 )
 
@@ -57,19 +57,19 @@ target_link_libraries(mongo-db-lasterror
   mongo-util-net
 )
 
-add_library(mongo-db-message
+add_mongo_library(mongo-db-message
   dbmessage.cpp
 )
 
-add_library(mongo-db-server-options-core
+add_mongo_library(mongo-db-server-options-core
   server_options.cpp
 )
 
-add_library(mongo-db-server-parameters
+add_mongo_library(mongo-db-server-parameters
   server_parameters.cpp
 )
 
-add_executable(mongod
+add_mongo_executable(mongod
   db.cpp
 )
 

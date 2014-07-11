@@ -1,4 +1,4 @@
-add_library(mongo-bson-util
+add_mongo_library(mongo-bson-util
   bson_extract.cpp
 )
 
