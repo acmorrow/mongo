@@ -1,6 +1,4 @@
-find_library(PCRECPP_LIBRARY
-  NAMES pcrecpp
-)
+find_package(PythonInterp 2.7 REQUIRED)
 
 add_definitions(-DMONGO_CMAKE_BUILD)
 add_definitions(-DMONGO_EXPOSE_MACROS)

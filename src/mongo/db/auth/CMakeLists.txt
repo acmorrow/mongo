@@ -2,7 +2,7 @@
  # TODO: Should find/configure python
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/action_type.h ${CMAKE_CURRENT_BINARY_DIR}/action_type.cpp
-    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/generate_action_types.py ${CMAKE_CURRENT_SOURCE_DIR}/action_types.txt ${CMAKE_CURRENT_BINARY_DIR}/action_type.h ${CMAKE_CURRENT_BINARY_DIR}/action_type.cpp
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_action_types.py ${CMAKE_CURRENT_SOURCE_DIR}/action_types.txt ${CMAKE_CURRENT_BINARY_DIR}/action_type.h ${CMAKE_CURRENT_BINARY_DIR}/action_type.cpp
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/generate_action_types.py ${CMAKE_CURRENT_SOURCE_DIR}/action_types.txt
 )
 
