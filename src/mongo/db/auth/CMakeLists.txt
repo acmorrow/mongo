@@ -14,7 +14,7 @@ add_custom_target(mongo-db-auth-generate DEPENDS
 add_dependencies(mongo_generate mongo-db-auth-generate)
 
 add_mongo_library(mongo-db-auth-core
-  ${CMAKE_CURRENT_BINARY_DIR}/action_type.h
+  action_set.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/action_type.cpp
   authorization_manager.cpp
   authorization_session.cpp

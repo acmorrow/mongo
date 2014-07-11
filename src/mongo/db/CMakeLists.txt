@@ -69,17 +69,6 @@ add_mongo_library(mongo-db-server-parameters
   server_parameters.cpp
 )
 
-add_mongo_executable(mongod
-  db.cpp
-)
-
-target_link_libraries(mongod
-  ${Boost_LIBRARIES}
-  mongo-db-auth-mongod
-  mongo-util-cmdline-utils
-  mongo-util-net-message-server-port
-)
-
 file (GLOB ch_files
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h
