@@ -12,8 +12,6 @@ add_mongo_library(mongo-util-options-parser
 
 target_link_libraries(mongo-util-options-parser
   mongo-bson
-  # TODO: Should just be program_options
-  ${Boost_LIBRARIES}
   mongo-thirdparty-shim-yaml
   mongo-thirdparty-shim-pcrecpp
 )

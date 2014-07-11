@@ -12,7 +12,6 @@ macro(mongo_cxx_unittest suite testname)
   )
   target_link_libraries(${testname}
     mongo-unittest-main
-    ${Boost_LIBRARIES}
   )
   add_test(
     NAME ${suite}/${testname}

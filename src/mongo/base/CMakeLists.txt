@@ -30,6 +30,7 @@ add_mongo_library(mongo-base
 
 target_link_libraries(mongo-base
   mongo-thirdparty-murmurhash3
+  ${Boost_LIBRARIES}
 )
 
 macro(mongo_base_cxx_unittest testname)
