@@ -7,8 +7,7 @@ add_custom_command(
 )
 
 add_library(mongo-db-auth-core
-  action_set.h
-  action_set.cpp
+  action_type.h
   action_type.cpp
   authorization_manager.cpp
   authorization_session.cpp
