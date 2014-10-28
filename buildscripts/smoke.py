@@ -327,6 +327,10 @@ class mongod(NullMongod):
         sys.stderr.flush()
         sys.stdout.flush()
 
+        retcode = self.proc.returncode
+        if retcode != 0:
+            raise(Exception('mongod process exited with non-zero code %d' % retcode))
+
     def wait_for_repl(self):
         Connection(port=self.port).testing.smokeWait.insert({}, w=2, wtimeout=5*60*1000)
 
@@ -1258,7 +1262,7 @@ def main():
                       default=False,
                       help='Clear database files before first test')
     parser.add_option('--clean-every', dest='clean_every_n_tests', type='int',
-                      default=20,
+                      default=(1 if 'detect_leaks=1' in os.getenv("ASAN_OPTIONS", "") else 20),
                       help='Clear database files every N tests [default %default]')
     parser.add_option('--dont-start-mongod', dest='start_mongod', default=True,
                       action='store_false',
