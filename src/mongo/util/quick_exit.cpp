@@ -43,9 +43,21 @@
 #include <sanitizer/lsan_interface.h>
 #endif
 
+#define MONGO_LOG_DEFAULT_COMPONENT ::mongo::logger::LogComponent::kControl
+
+#include <mongo/util/log.h>
+#include <mongo/util/stacktrace.h"
+
 namespace mongo {
 
     void quickExit(int code) {
+
+#if defined(_WIN32)
+        if (code != 0) {
+            log() << "ACM: Windows build exiting with non-zero code " << code << "; stack: ";
+            printStackTrace();
+        }
+#endif
 
 #if __has_feature(address_sanitizer)
         __lsan_do_leak_check();
