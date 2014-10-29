@@ -45,8 +45,8 @@
 
 #define MONGO_LOG_DEFAULT_COMPONENT ::mongo::logger::LogComponent::kControl
 
-#include <mongo/util/log.h>
-#include <mongo/util/stacktrace.h"
+#include "mongo/util/log.h"
+#include "mongo/util/stacktrace.h"
 
 namespace mongo {
 
