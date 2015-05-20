@@ -314,6 +314,19 @@ namespace mongo {
             response = 0;
         }
         ~DbResponse() { delete response; }
+
+        DbResponse(DbResponse&& other) {
+            response = other.response; other.response = nullptr;
+            responseTo = std::move(other.responseTo);
+            exhaustNS = std::move(other.exhaustNS);
+        }
+
+        DbResponse& operator=(DbResponse&& other) {
+            response = other.response; other.response = nullptr;
+            responseTo = std::move(other.responseTo);
+            exhaustNS = std::move(other.exhaustNS);
+            return *this;
+        }
     };
 
     void replyToQuery(int queryResultFlags,

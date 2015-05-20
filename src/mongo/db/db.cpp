@@ -37,10 +37,13 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <limits>
+#include <queue>
 #include <signal.h>
 #include <string>
+#include <utility>
 
 #include "mongo/base/init.h"
 #include "mongo/base/initializer.h"
@@ -153,24 +156,123 @@ namespace mongo {
 
     class MyMessageHandler : public MessageHandler {
     public:
+
+        MyMessageHandler() {
+            for (size_t i = 0; i != kInitialWorkerThreads; ++i)
+                startWorkerThread();
+        }
+
         virtual void connected( AbstractMessagingPort* p ) {
-            Client::initThread("conn", p);
+            std::string name;
+            name = str::stream() << "conn" << p->connectionId();
+            setThreadName(name);
+
+            // Construct a new client object to represent this connection, and store it in the
+            // _clients map, using the address of its associated messaging port as the key.
+            stdx::lock_guard<stdx::mutex> lock(_mutex);
+            _clients[p] = getGlobalServiceContext()->makeClient(name, nullptr);
+        }
+
+        virtual void disconnected( AbstractMessagingPort* p ) {
+            // Remove the client associated with this messaging port from the map, since the
+            // client has disconnected and will not be sending more messages.
+            stdx::lock_guard<stdx::mutex> lock(_mutex);
+            _clients.erase(p);
+        }
+
+        void startWorkerThread() {
+            // Create a new worker thread, which spends its life waiting for new work items to
+            // arrive in the _work queue, and then executes them.
+            _workers.emplace_back([this] {
+                while (true) {
+                    decltype(_work)::value_type workItem;
+                    {
+                        stdx::unique_lock<stdx::mutex> lock(_mutex);
+                        ++_freeThreads;
+                        _workAvail.wait(lock, [this]{ return !_work.empty(); });
+                        --_freeThreads;
+                        workItem = std::move(_work.front());
+                        _work.pop();
+                    }
+                    workItem();
+                }
+            });
+
+            // We don't bother to clean up worker threads, since we exit via _exit :(
+            _workers.back().detach();
         }
 
         virtual void process(Message& m , AbstractMessagingPort* port) {
+
+            LOG(3) << "Network thread processing request";
+
             while ( true ) {
                 if ( inShutdown() ) {
                     log() << "got request after shutdown()" << endl;
                     break;
                 }
 
-                DbResponse dbresponse;
+                // The slot where we will be signaled with our result, when the database layer
+                // has finished processing it.
+                std::future<DbResponse> result;
+
                 {
-                    OperationContextImpl txn;
-                    assembleResponse(&txn, m, dbresponse, port->remote());
-                    // txn must go out of scope here so that the operation cannot show up in
-                    // currentOp results after the response reaches the client.
+                    stdx::lock_guard<stdx::mutex> lock(_mutex);
+
+                    // If all worker threads are busy, start a new one. Currently, there is no
+                    // upper bound, so the number of workers will scale to match the maximum
+                    // number of concurrently active connections.
+                    if (_freeThreads == 0) {
+                        startWorkerThread();
+                    }
+
+                    // Enqueue the body of work that we want the server thread to execute as a
+                    // packaged task.  The lambda returns a DbResponse that will deliver the
+                    // promised value to the future.
+                    _work.emplace([this, port, &m]() -> DbResponse {
+
+                        // Under the lock, find the client for the active port, and attach the
+                        // client to the currently executing worker thread.
+                        {
+                            stdx::lock_guard<stdx::mutex> lock(_mutex);
+                            UniqueClient& client = _clients[port];
+                            Client::attachToCurrentThread(std::move(client), port);
+                        }
+
+                        // Invoke the database and get a populated DbResponse.
+                        DbResponse dbresponse;
+
+                        LOG(3) << "Database thread processing request";
+                        {
+                            // Ensure that the transaction lasts no longer than needed.
+                            OperationContextImpl txn;
+                            assembleResponse(&txn, m, dbresponse, port->remote());
+                        }
+                        LOG(3) << "Database thread finished processing request";
+
+                        // Sever the connection between this thread and the Client. Subsequent
+                        // work for this client may be handled by a different thread.
+                        {
+                            stdx::lock_guard<stdx::mutex> lock(_mutex);
+                            UniqueClient& client = _clients[port];
+                            client = Client::detachFromCurrentThread();
+                        }
+
+                        // Return the DbResponse that we constructed, providing a value to the
+                        // promise in the packaged task and making the future ready.
+                        return dbresponse;
+                    });
+
+                    // Get the future from the packaged task we just created.
+                    result = _work.back().get_future();
                 }
+
+                // Notify a worker thread that new work is available in the queue, and then
+                // wait for one of the worker threads to execute the work and make our future
+                // ready. Once ready, our DbResponse can be moved out of the future.
+                _workAvail.notify_one();
+                result.wait();
+                DbResponse dbresponse = result.get();
 
                 if ( dbresponse.response ) {
                     port->reply(m, *dbresponse.response, dbresponse.responseTo);
@@ -200,7 +302,21 @@ namespace mongo {
                 }
                 break;
             }
+
+            LOG(3) << "Network thread finished processing request";
         }
+
+    private:
+        static const size_t kInitialWorkerThreads = 4;
+
+        using UniqueClient = ServiceContext::UniqueClient;
+
+        stdx::mutex _mutex;
+        stdx::condition_variable _workAvail;
+        unordered_map<void*, UniqueClient> _clients;
+        std::queue<std::packaged_task<DbResponse()>> _work;
+        std::vector<stdx::thread> _workers;
+        size_t _freeThreads;
     };
 
     static void logStartup() {

@@ -48,6 +48,11 @@ namespace mongo {
         virtual void connected( AbstractMessagingPort* p ) = 0;
 
         /**
+         * called when that socket is disconnected
+         */
+        virtual void disconnected( AbstractMessagingPort* p ) {};
+
+        /**
          * called every time a message comes in
          * handler is responsible for responding to client
          */

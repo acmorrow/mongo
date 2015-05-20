@@ -220,6 +220,7 @@ namespace {
                             log() << "end connection " << portWithHandler->psock->remoteString()
                                   << " (" << conns << word << " now open)" << endl;
                         }
+                        handler->disconnected(portWithHandler.get());
                         portWithHandler->shutdown();
                         break;
                     }

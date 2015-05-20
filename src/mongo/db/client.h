@@ -57,6 +57,8 @@ namespace mongo {
     /** the database's concept of an outside "client" */
     class Client : public ClientBasic {
     public:
+        using UniqueClient = ServiceContext::UniqueClient;
+
         /** each thread which does db operations has a Client object in TLS.
          *  call this when your thread starts.
         */
@@ -64,6 +66,9 @@ namespace mongo {
         static void initThread(const char* desc,
                                ServiceContext* serviceContext,
                                AbstractMessagingPort* mp);
+
+        static void attachToCurrentThread(UniqueClient client, AbstractMessagingPort* port);
+        static UniqueClient detachFromCurrentThread();
 
         /**
          * Inits a thread if that thread has not already been init'd, setting the thread name to
@@ -137,7 +142,7 @@ namespace mongo {
         const boost::thread::id _threadId;
 
         // > 0 for things "conn", 0 otherwise
-        const ConnectionId _connectionId;
+        ConnectionId _connectionId;
 
         // Protects the contents of the Client (such as changing the OperationContext, etc)
         mutable SpinLock _lock;

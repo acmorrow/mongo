@@ -37,6 +37,7 @@
 #include "mongo/db/client.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "mongo/base/status.h"
@@ -89,21 +90,29 @@ namespace mongo {
         *currentClient.get() = service->makeClient(fullDesc, mp);
     }
 
+    void Client::attachToCurrentThread(UniqueClient client, AbstractMessagingPort* port) {
+        invariant(currentClient.getMake()->get() == nullptr);
+        setThreadName(client->desc());
+        client->setPort(port);
+        client->_connectionId = port ? port->connectionId() : 0;
+        *currentClient.get() = std::move(client);
+    }
+
+    Client::UniqueClient Client::detachFromCurrentThread() {
+        setThreadName("");
+        return std::move(*currentClient.get());
+    }
+
     Client::Client(std::string desc,
                    ServiceContext* serviceContext,
                    AbstractMessagingPort *p)
         : ClientBasic(serviceContext, p),
           _desc(std::move(desc)),
-          _threadId(stdx::this_thread::get_id()),
           _connectionId(p ? p->connectionId() : 0) {
     }
 
     void Client::reportState(BSONObjBuilder& builder) {
         builder.append("desc", desc());
-
-        std::stringstream ss;
-        ss << _threadId;
-        builder.append("threadId", ss.str());
 
         if (_connectionId) {
             builder.appendNumber("connectionId", _connectionId);
