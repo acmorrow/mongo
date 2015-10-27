@@ -102,7 +102,7 @@ void NetworkInterfaceASIO::_connect(AsyncOp* op) {
         _validateAndRun(
             op, ec, [this, op, endpoints]() { _setupSocket(op, std::move(endpoints)); });
     };
-    _resolver.async_resolve(query, std::move(thenConnect));
+    op->resolver().async_resolve(query, std::move(thenConnect));
 }
 
 void NetworkInterfaceASIO::_setupSocket(AsyncOp* op, tcp::resolver::iterator endpoints) {

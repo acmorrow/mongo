@@ -52,6 +52,10 @@
 namespace mongo {
 namespace executor {
 
+namespace {
+    std::size_t kIOServiceWorkers = 64;
+} // namespace
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 NetworkInterfaceASIO::Options::Options(Options&& other)
     : connectionPoolOptions(std::move(other.connectionPoolOptions)),
@@ -75,7 +79,6 @@ NetworkInterfaceASIO::NetworkInterfaceASIO(Options options)
       _io_service(),
       _metadataHook(std::move(_options.metadataHook)),
       _hook(std::move(_options.networkConnectionHook)),
-      _resolver(_io_service),
       _state(State::kReady),
       _timerFactory(std::move(_options.timerFactory)),
       _streamFactory(std::move(_options.streamFactory)),
@@ -99,25 +102,35 @@ std::string NetworkInterfaceASIO::getHostName() {
 }
 
 void NetworkInterfaceASIO::startup() {
-    _serviceRunner = stdx::thread([this]() {
-        setThreadName("NetworkInterfaceASIO");
-        try {
-            LOG(2) << "The NetworkInterfaceASIO worker thread is spinning up";
-            asio::io_service::work work(_io_service);
-            _io_service.run();
-        } catch (...) {
-            severe() << "Uncaught exception in NetworkInterfaceASIO IO worker thread of type: "
-                     << exceptionToStatus();
-            fassertFailed(28820);
-        }
-    });
+    std::generate_n(
+        std::back_inserter(_serviceRunners),
+        kIOServiceWorkers,
+        [this] {
+            return stdx::thread([this] {
+                // TODO number them
+                setThreadName("NetworkInterfaceASIO");
+                try {
+                    LOG(2) << "A NetworkInterfaceASIO worker thread is spinning up";
+                    asio::io_service::work work(_io_service);
+                    _io_service.run();
+                } catch (...) {
+                    severe()
+                        << "Uncaught exception in NetworkInterfaceASIO IO worker thread of type: "
+                        << exceptionToStatus();
+                    fassertFailed(28820);
+                }
+            });
+        });
+
     _state.store(State::kRunning);
 }
 
 void NetworkInterfaceASIO::shutdown() {
     _state.store(State::kShutdown);
     _io_service.stop();
-    _serviceRunner.join();
+    for (auto& worker : _serviceRunners) {
+        worker.join();
+    }
     LOG(2) << "NetworkInterfaceASIO shutdown successfully";
 }
 

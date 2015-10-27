@@ -61,6 +61,7 @@ private:
     void _handleHandshake(std::error_code ec, const std::string& hostName);
 
     asio::ssl::stream<asio::ip::tcp::socket> _stream;
+    asio::io_service::strand _strand;
     ConnectHandler _userHandler;
     bool _connected = false;
 };

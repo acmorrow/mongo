@@ -51,6 +51,7 @@ public:
 
 private:
     asio::ip::tcp::socket _stream;
+    asio::io_service::strand _strand;
     bool _connected = false;
 };
 

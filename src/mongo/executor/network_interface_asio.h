@@ -278,6 +278,8 @@ private:
 
         void setOnFinish(RemoteCommandCompletionFn&& onFinish);
 
+        asio::ip::tcp::resolver& resolver() { return _resolver; }
+
     private:
         NetworkInterfaceASIO* const _owner;
         // Information describing a task enqueued on the NetworkInterface
@@ -322,6 +324,9 @@ private:
          */
         boost::optional<AsyncCommand> _command;
         bool _inSetup;
+
+        // Resolver that this op will use.
+        asio::ip::tcp::resolver _resolver;
     };
 
     void _startCommand(AsyncOp* op);
@@ -371,13 +376,11 @@ private:
     Options _options;
 
     asio::io_service _io_service;
-    stdx::thread _serviceRunner;
+    std::vector<stdx::thread> _serviceRunners;
 
     const std::unique_ptr<rpc::EgressMetadataHook> _metadataHook;
 
     const std::unique_ptr<NetworkConnectionHook> _hook;
-
-    asio::ip::tcp::resolver _resolver;
 
     std::atomic<State> _state;  // NOLINT
 

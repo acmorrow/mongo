@@ -102,7 +102,8 @@ NetworkInterfaceASIO::AsyncOp::AsyncOp(NetworkInterfaceASIO* const owner,
       _canceled(0),
       _timedOut(0),
       _access(std::make_shared<AsyncOp::AccessControl>()),
-      _inSetup(true) {}
+      _inSetup(true),
+      _resolver(owner->_io_service){}
 
 void NetworkInterfaceASIO::AsyncOp::cancel() {
     LOG(2) << "Canceling operation; original request was: " << request().toString();
