@@ -259,16 +259,6 @@ add_option('durableDefaultOn',
     nargs=0,
 )
 
-if is_running_os('linux') or is_running_os('windows'):
-   defaultAllocator = 'tcmalloc'
-else:
-    defaultAllocator = 'system'
-
-add_option('allocator',
-    default=defaultAllocator,
-    help='allocator to use (tcmalloc or system)',
-)
-
 add_option('gdbserver',
     help='build in gdb server support',
     nargs=0,
@@ -1017,6 +1007,28 @@ detectConf.Finish()
 
 env['CC_VERSION'] = get_toolchain_ver(env, 'CC')
 env['CXX_VERSION'] = get_toolchain_ver(env, 'CXX')
+
+# We add the allocator option late because we want to have the
+# architecture detected so we can use that to select the default.
+#
+# Currently we only use tcmalloc on windows and linux x86_64. Other
+# linux targets (power, s390x, arm) do not currently support tcmalloc.
+#
+# TODO: If these restrictions or variations are ever removed, relocate
+# this option back to where it would normally be found, with the other
+# options.
+if env.TargetOSIs('windows') or \
+   (env.TargetOSIs('linux') and (env['TARGET_ARCH'] in ['i386', 'x86_64'])):
+    defaultAllocator = "tcmalloc"
+else:
+    defaultAllocator = "system"
+
+add_option('allocator',
+    choices=["system", "tcmalloc"],
+    default=defaultAllocator,
+    help='allocator to use (use "auto" for best choice for current platform)',
+    type='choice',
+)
 
 if not env['HOST_ARCH']:
     env['HOST_ARCH'] = env['TARGET_ARCH']
