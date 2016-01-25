@@ -619,6 +619,10 @@ class TCMallocImplementation : public MallocExtension {
     return DumpHeapGrowthStackTraces();
   }
 
+  virtual void MarkThreadTemporarilyIdle() {
+    ThreadCache::BecomeTemporarilyIdle();
+  }
+
   virtual void Ranges(void* arg, RangeFunction func) {
     IterateOverRanges(arg, func);
   }

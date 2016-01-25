@@ -197,6 +197,10 @@ void MallocExtension::GetFreeListSizes(
   v->clear();
 }
 
+void MallocExtension::MarkThreadTemporarilyIdle() {
+  // Default implementation does nothing
+}
+
 // The current malloc extension object.
 
 static MallocExtension* current_instance;
