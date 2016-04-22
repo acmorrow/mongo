@@ -308,10 +308,24 @@ elif processor == "aarch64":
 elif processor == 'x86_64' or processor == 'ppc64le':
     cpp_defines['efi2'] = '1'
     cpp_defines['EFI2'] = '1'
+
 # Using 64 bit big endian
 elif processor == 's390x':
     cpp_defines['s390x'] = '1'
     cpp_defines['BID_BIG_ENDIAN'] = '1'
+
+# Using 32 bit big endian
+elif processor == 'sparc':
+    cpp_defines['IA32'] = '1'
+    cpp_defines['ia32'] = '1'
+    cpp_defines['BID_BIG_ENDIAN'] = '1'
+
+# Using 64 bit big endian
+elif processor == 'sparcv9':
+    cpp_defines['efi2'] = '1'
+    cpp_defines['EFI2'] = '1'
+    cpp_defines['BID_BIG_ENDIAN'] = '1'
+
 else:
     assert False, "Unsupported architecture: " + processor
 
