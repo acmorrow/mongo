@@ -1178,7 +1178,7 @@ link_model = get_option('link-model')
 if link_model == "auto":
     link_model = "object" if (env.TargetOSIs('windows') or has_option("release")) else "static"
 elif has_option("release") and link_model != "object":
-    env.FatalError("The link model for release builds is required to be 'object'")
+    pass #env.FatalError("The link model for release builds is required to be 'object'")
 
 # The only link model currently supported on Windows is 'object', since there is no equivalent
 # to --whole-archive.
