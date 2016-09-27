@@ -1327,6 +1327,9 @@ if env['_LIBDEPS'] == '$_LIBDEPS_OBJS':
     env['ARCOMSTR'] = 'Generating placeholder library $TARGET'
     env['RANLIBCOM'] = noop_action
     env['RANLIBCOMSTR'] = 'Skipping ranlib for $TARGET'
+elif env['_LIBDEPS'] == '$_LIBDEPS_LIBS':
+    env.Tool('thin_archive')
+
 
 libdeps.setup_environment(env, emitting_shared=(link_model.startswith("dynamic")))
 
