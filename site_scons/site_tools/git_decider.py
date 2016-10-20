@@ -31,11 +31,11 @@ def generate(env, **kwargs):
     file_sha1_map = {}
     for line in lines:
         line_content = line.split()
-        file_sha1_map[line_content[3]] = line_content[1]
+        file_sha1_map[env.File(line_content[3]).path] = line_content[1]
 
     for m in thisRepo.ls_files('-m').split('\n'):
         if (m):
-            del file_sha1_map[m]
+            del file_sha1_map[env.File(m).path]
 
     def is_known_to_git(dependency):
         return str(dependency) in file_sha1_map
