@@ -35,20 +35,20 @@
 namespace mongo {
 namespace transport {
 
-TransportLayerASIO::TransportLayerASIO(ServiceEntryPoint* sep) {}
+TransportLayerASIO::TransportLayerASIO(ServiceEntryPoint* sep) : _sep(sep) {}
 
 
 TransportLayerASIO::~TransportLayerASIO() = default;
 
-Ticket TransportLayerASIO::sourceMessage(const SessionHandle& session,
-                                         Message* message,
-                                         Date_t expiration) {
+transport::Ticket TransportLayerASIO::sourceMessage(const SessionHandle& session,
+                                                    Message* message,
+                                                    Date_t expiration) {
     MONGO_UNREACHABLE;
 }
 
-Ticket TransportLayerASIO::sinkMessage(const SessionHandle& session,
-                                       const Message& message,
-                                       Date_t expiration) {
+transport::Ticket TransportLayerASIO::sinkMessage(const SessionHandle& session,
+                                                  const Message& message,
+                                                  Date_t expiration) {
     MONGO_UNREACHABLE;
 }
 
@@ -64,7 +64,7 @@ SSLPeerInfo TransportLayerASIO::getX509PeerInfo(const ConstSessionHandle& sessio
     MONGO_UNREACHABLE;
 }
 
-TransportLayer::Stats TransportLayerLegacy::sessionStats() {
+TransportLayer::Stats TransportLayerASIO::sessionStats() {
     MONGO_UNREACHABLE;
 }
 
@@ -84,19 +84,19 @@ void TransportLayerASIO::shutdown() {
     MONGO_UNREACHABLE;
 }
 
-const HostAndPort& TransportLayerASIO::Session::remote() {
+const HostAndPort& TransportLayerASIO::ASIOSession::remote() const {
     MONGO_UNREACHABLE;
 }
 
-const HostAndPort& TransportLayerASIO::Session::local() {
+const HostAndPort& TransportLayerASIO::ASIOSession::local() const {
     MONGO_UNREACHABLE;
 }
 
-SessionId TransportLayerASIO::Ticket::sessionID() const {
+SessionId TransportLayerASIO::ASIOTicket::sessionId() const {
     MONGO_UNREACHABLE;
 }
 
-Date_t TransportLayerASIO::Ticket::expiration() const {
+Date_t TransportLayerASIO::ASIOTicket::expiration() const {
     MONGO_UNREACHABLE;
 }
 

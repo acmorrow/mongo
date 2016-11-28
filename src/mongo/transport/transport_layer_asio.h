@@ -32,6 +32,7 @@
 
 #include "mongo/transport/ticket_impl.h"
 #include "mongo/transport/transport_layer.h"
+#include "mongo/util/net/ssl_types.h"
 
 namespace mongo {
 
@@ -69,7 +70,7 @@ public:
 
     void end(const SessionHandle& session) override;
 
-    void endAllSessions(transport::Session::TagMask tags) override;
+    void endAllSessions(Session::TagMask tags) override;
 
     Status start() override;
 
@@ -77,18 +78,18 @@ public:
 
 private:
     // Our private vocabulary types.
-    class Connection;
-    class Session;
-    class Ticket;
+    class ASIOConnection;
+    class ASIOSession;
+    class ASIOTicket;
 
-    using SessionHandle = std::shared_ptr<Session>;
-    using ConstSessionHandle = std::shared_ptr<const Session>;
+    using ASIOSessionHandle = std::shared_ptr<ASIOSession>;
+    using ConstASIOSessionHandle = std::shared_ptr<const ASIOSession>;
 
-    class Connection {
+    class ASIOConnection {
     };
 
-    class Session : public transport::Session {
-        MONGO_DISALLOW_COPYING(Session);
+    class ASIOSession : public Session {
+        MONGO_DISALLOW_COPYING(ASIOSession);
 
     public:
         TransportLayer* getTransportLayer() const override {
@@ -100,11 +101,11 @@ private:
         const HostAndPort& local() const override;
 
     private:
-        TransportLayerLegacy* _tl;
+        TransportLayerASIO* const _tl;
     };
 
-    class Ticket : public TicketImpl {
-        MONGO_DISALLOW_COPYING(Ticket);
+    class ASIOTicket : public TicketImpl {
+        MONGO_DISALLOW_COPYING(ASIOTicket);
 
     public:
         SessionId sessionId() const override;
