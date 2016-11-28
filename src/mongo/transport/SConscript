@@ -48,9 +48,10 @@ env.Library(
 )
 
 env.Library(
-    target='transport_layer_legacy',
+    target='transport_layer',
     source=[
         'transport_layer_legacy.cpp',
+        'transport_layer_asio.cpp',
     ],
     LIBDEPS=[
         'transport_layer_common',

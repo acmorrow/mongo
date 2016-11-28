@@ -47,19 +47,9 @@ class TransportLayerASIO final : public TransportLayer {
     MONGO_DISALLOW_COPYING(TransportLayerASIO);
 
 public:
-    struct Options {
-        int port;            // port to bind to
-        std::string ipList;  // addresses to bind to
-
-        Options() : port(0), ipList("") {}
-    };
-
-    TransportLayerASIO(const Options& opts, ServiceEntryPoint* sep);
+    TransportLayerASIO(ServiceEntryPoint* sep);
 
     ~TransportLayerASIO();
-
-    Status setup();
-    Status start() override;
 
     Ticket sourceMessage(const SessionHandle& session,
                          Message* message,
@@ -70,6 +60,7 @@ public:
                        Date_t expiration = Ticket::kNoExpirationDate) override;
 
     Status wait(Ticket&& ticket) override;
+
     void asyncWait(Ticket&& ticket, TicketCallback callback) override;
 
     SSLPeerInfo getX509PeerInfo(const ConstSessionHandle& session) const override;
@@ -77,11 +68,50 @@ public:
     Stats sessionStats() override;
 
     void end(const SessionHandle& session) override;
+
     void endAllSessions(transport::Session::TagMask tags) override;
+
+    Status start() override;
 
     void shutdown() override;
 
 private:
+    // Our private vocabulary types.
+    class Connection;
+    class Session;
+    class Ticket;
+
+    using SessionHandle = std::shared_ptr<Session>;
+    using ConstSessionHandle = std::shared_ptr<const Session>;
+
+    class Connection {
+    };
+
+    class Session : public transport::Session {
+        MONGO_DISALLOW_COPYING(Session);
+
+    public:
+        TransportLayer* getTransportLayer() const override {
+            return _tl;
+        }
+
+        const HostAndPort& remote() const override;
+
+        const HostAndPort& local() const override;
+
+    private:
+        TransportLayerLegacy* _tl;
+    };
+
+    class Ticket : public TicketImpl {
+        MONGO_DISALLOW_COPYING(Ticket);
+
+    public:
+        SessionId sessionId() const override;
+        Date_t expiration() const override;
+    };
+
+    ServiceEntryPoint* const _sep;
 };
 
 }  // namespace transport

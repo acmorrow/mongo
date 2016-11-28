@@ -35,51 +35,69 @@
 namespace mongo {
 namespace transport {
 
-TransportLayerASIO::TransportLayerASIO(const TransportLayerASIO::Options& opts,
-                                       ServiceEntryPoint* sep) {}
+TransportLayerASIO::TransportLayerASIO(ServiceEntryPoint* sep) {}
 
 
 TransportLayerASIO::~TransportLayerASIO() = default;
 
-Status TransportLayerASIO::setup() {
-    return Status::OK();
-}
-
-Status TransportLayerASIO::start() {
-    return Status::OK();
-}
-
 Ticket TransportLayerASIO::sourceMessage(const SessionHandle& session,
                                          Message* message,
                                          Date_t expiration) {
+    MONGO_UNREACHABLE;
 }
 
 Ticket TransportLayerASIO::sinkMessage(const SessionHandle& session,
                                        const Message& message,
                                        Date_t expiration) {
-}
-
-SSLPeerInfo TransportLayerASIO::getX509PeerInfo(const ConstSessionHandle& session) const {
-}
-
-TransportLayer::Stats TransportLayerLegacy::sessionStats() {
-    Stats stats;
-    return stats;
+    MONGO_UNREACHABLE;
 }
 
 Status TransportLayerASIO::wait(Ticket&& ticket) {
+    MONGO_UNREACHABLE;
 }
 
 void TransportLayerASIO::asyncWait(Ticket&& ticket, TicketCallback callback) {
+    MONGO_UNREACHABLE;
+}
+
+SSLPeerInfo TransportLayerASIO::getX509PeerInfo(const ConstSessionHandle& session) const {
+    MONGO_UNREACHABLE;
+}
+
+TransportLayer::Stats TransportLayerLegacy::sessionStats() {
+    MONGO_UNREACHABLE;
 }
 
 void TransportLayerASIO::end(const SessionHandle& session) {
+    MONGO_UNREACHABLE;
 }
 
 void TransportLayerASIO::endAllSessions(Session::TagMask tags) {
+    MONGO_UNREACHABLE;
+}
+
+Status TransportLayerASIO::start() {
+    MONGO_UNREACHABLE;
 }
 
 void TransportLayerASIO::shutdown() {
+    MONGO_UNREACHABLE;
+}
+
+const HostAndPort& TransportLayerASIO::Session::remote() {
+    MONGO_UNREACHABLE;
+}
+
+const HostAndPort& TransportLayerASIO::Session::local() {
+    MONGO_UNREACHABLE;
+}
+
+SessionId TransportLayerASIO::Ticket::sessionID() const {
+    MONGO_UNREACHABLE;
+}
+
+Date_t TransportLayerASIO::Ticket::expiration() const {
+    MONGO_UNREACHABLE;
 }
 
 }  // namespace transport
