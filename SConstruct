@@ -524,6 +524,7 @@ add_option('git-decider',
 
 add_option('incremental-link',
     choices=['auto', 'on', 'off'],
+    const="on",
     default='auto',
     help='Use incremental link',
     nargs='?',
