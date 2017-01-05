@@ -54,8 +54,16 @@ public:
     virtual void connect(asio::ip::tcp::resolver::iterator endpoints,
                          ConnectHandler&& connectHandler) = 0;
 
+    /** Non-blocking synchronous write */
+    virtual std::size_t write(asio::const_buffer buf, std::error_code& ec) = 0;
+
+    /** Asynchronous write */
     virtual void write(asio::const_buffer buf, StreamHandler&& writeHandler) = 0;
 
+    /** Non-blocking synchronous read */
+    virtual std::size_t read(asio::mutable_buffer buf, std::error_code& ec) = 0;
+
+    /** Asynchronous read */
     virtual void read(asio::mutable_buffer buf, StreamHandler&& readHandler) = 0;
 
     virtual void cancel() = 0;

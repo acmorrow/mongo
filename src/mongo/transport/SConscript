@@ -47,7 +47,9 @@ env.Library(
     ],
 )
 
-env.Library(
+tlEnv = env.Clone()
+tlEnv.InjectThirdPartyIncludePaths('asio')
+tlEnv.Library(
     target='transport_layer',
     source=[
         'transport_layer_legacy.cpp',
@@ -57,6 +59,7 @@ env.Library(
         'transport_layer_common',
         '$BUILD_DIR/mongo/db/service_context',
         '$BUILD_DIR/mongo/db/stats/counters',
+        '$BUILD_DIR/third_party/shim_asio',
     ],
 )
 

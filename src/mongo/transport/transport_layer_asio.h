@@ -30,14 +30,20 @@
 
 #include <string>
 
+#include <asio.hpp>
+
 #include "mongo/transport/ticket_impl.h"
 #include "mongo/transport/transport_layer.h"
 #include "mongo/util/net/ssl_types.h"
+#include "mongo/stdx/mutex.h"
 
 namespace mongo {
 
-class AbstractMessagingPort;
 class ServiceEntryPoint;
+
+namespace executor {
+class AsyncStreamInterface;
+}  // namespace executor
 
 namespace transport {
 
@@ -64,8 +70,6 @@ public:
 
     void asyncWait(Ticket&& ticket, TicketCallback callback) override;
 
-    SSLPeerInfo getX509PeerInfo(const ConstSessionHandle& session) const override;
-
     Stats sessionStats() override;
 
     void end(const SessionHandle& session) override;
@@ -80,13 +84,12 @@ private:
     // Our private vocabulary types.
     class ASIOConnection;
     class ASIOSession;
+    friend class ASIOSession;
+
     class ASIOTicket;
 
     using ASIOSessionHandle = std::shared_ptr<ASIOSession>;
     using ConstASIOSessionHandle = std::shared_ptr<const ASIOSession>;
-
-    class ASIOConnection {
-    };
 
     class ASIOSession : public Session {
         MONGO_DISALLOW_COPYING(ASIOSession);
@@ -100,19 +103,102 @@ private:
 
         const HostAndPort& local() const override;
 
+        /**
+         * Starts the process of reading a new message, and returns a callback to be associated with
+         * the Ticket.
+         */
+        static void beginRead(const ASIOSessionHandle& self, Message* message);
+
+        /**
+         * Continues a read once we have obtained a header in buffer.
+         */
+        static void continueRead(const ASIOSessionHandle& self, Message* message, SharedBuffer buf);
+
+        /**
+         * Starts the process of writing a new message, and returns a callback to be associated with
+         * the Ticket.
+         */
+        static void beginWrite(const ASIOSessionHandle& self, const Message& message);
+
+        template<typename ...Args>
+        void complete(Args&&...args) {
+            Status status(std::forward<Args>(args)...);
+            _complete(std::move(status));
+        }
+
+        /**
+         * Returns true if this session has been closed.
+         */
+        bool closed() const;
+
+        /**
+         * Returns the completion status of the currently pending operation. If the operation is not
+         * complete, then a disengaged optional is returned. The caller should call 'work' to
+         * advance the IO loop before checking again.
+         */
+        boost::optional<Status> getOperationStatus();
+
+        /**
+         * If the currently pending operation has completed, invoke 'callback' with the associated
+         * status. Otherwise, enqueue 'callback' to be invoked later when the operation completes.
+         */
+        void getOperationStatus(Ticket&& ticket, TicketCallback&& callback);
+
+        /**
+         * Perform work on behalf of this or other sessions to advance the state of pending
+         * operations. If the zero-argument form of getOperationStatus returns a disengaged
+         * optional, this method must be called at least once before retrying getOperationStatus to
+         * avoid potential busy-waiting.
+         */
+        void work();
+
     private:
+        void _posted();
+        void _complete(Status&& status);
+
         TransportLayerASIO* const _tl;
+        std::unique_ptr<executor::AsyncStreamInterface> _stream;
+
+        stdx::mutex _mutex;
+        boost::optional<Status> _status;
+        TicketCallback _callback;
     };
 
     class ASIOTicket : public TicketImpl {
         MONGO_DISALLOW_COPYING(ASIOTicket);
 
     public:
-        SessionId sessionId() const override;
-        Date_t expiration() const override;
+        explicit ASIOTicket(const ASIOSessionHandle& session, Date_t expiration)
+            : _session(session), _sessionId(session->id()), _expiration(expiration) {}
+
+        SessionId sessionId() const override {
+            return _sessionId;
+        }
+
+        Date_t expiration() const override {
+            return _expiration;
+        }
+
+        /**
+         * If this ticket's session is still alive, return a shared_ptr. Otherwise,
+         * return nullptr.
+         */
+        ASIOSessionHandle getSession() {
+            return _session.lock();
+        }
+
+    private:
+        const std::weak_ptr<ASIOSession> _session;
+        const SessionId _sessionId;
+        const Date_t _expiration;
     };
 
+    void _begin_accept();
+
     ServiceEntryPoint* const _sep;
+    AtomicWord<bool> _running;
+    asio::io_service _io_service;
+    std::unique_ptr<asio::ip::tcp::acceptor> _tcp_acceptor;
 };
 
 }  // namespace transport
