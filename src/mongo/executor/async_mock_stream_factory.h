@@ -76,7 +76,11 @@ public:
 
         void connect(asio::ip::tcp::resolver::iterator endpoints,
                      ConnectHandler&& connectHandler) override;
+
+        std::size_t write(asio::const_buffer buf, std::error_code& ec) override;
         void write(asio::const_buffer buf, StreamHandler&& writeHandler) override;
+
+        std::size_t read(asio::mutable_buffer buf, std::error_code& ec);
         void read(asio::mutable_buffer buf, StreamHandler&& readHandler) override;
 
         bool isOpen() override;

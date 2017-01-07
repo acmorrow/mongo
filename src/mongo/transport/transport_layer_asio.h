@@ -35,7 +35,10 @@
 #include "mongo/transport/ticket_impl.h"
 #include "mongo/transport/transport_layer.h"
 #include "mongo/util/net/ssl_types.h"
+#include "mongo/stdx/list.h"
+#include "mongo/stdx/memory.h"
 #include "mongo/stdx/mutex.h"
+#include "mongo/stdx/thread.h"
 
 namespace mongo {
 
@@ -90,11 +93,16 @@ private:
 
     using ASIOSessionHandle = std::shared_ptr<ASIOSession>;
     using ConstASIOSessionHandle = std::shared_ptr<const ASIOSession>;
+    using SessionEntry = std::list<std::weak_ptr<ASIOSession>>::iterator;
 
     class ASIOSession : public Session {
         MONGO_DISALLOW_COPYING(ASIOSession);
 
     public:
+        typedef asio::generic::stream_protocol::socket stream_socket;
+
+        ASIOSession(TransportLayerASIO* tl, stream_socket socket);
+
         TransportLayer* getTransportLayer() const override {
             return _tl;
         }
@@ -102,6 +110,10 @@ private:
         const HostAndPort& remote() const override;
 
         const HostAndPort& local() const override;
+
+        void setIter(SessionEntry it) {
+            _entry = std::move(it);
+        }
 
         /**
          * Starts the process of reading a new message, and returns a callback to be associated with
@@ -112,7 +124,7 @@ private:
         /**
          * Continues a read once we have obtained a header in buffer.
          */
-        static void continueRead(const ASIOSessionHandle& self, Message* message, SharedBuffer buf);
+        static void continueRead(const ASIOSessionHandle& self, Message* message, SharedBuffer&& buf);
 
         /**
          * Starts the process of writing a new message, and returns a callback to be associated with
@@ -131,37 +143,25 @@ private:
          */
         bool closed() const;
 
-        /**
-         * Returns the completion status of the currently pending operation. If the operation is not
-         * complete, then a disengaged optional is returned. The caller should call 'work' to
-         * advance the IO loop before checking again.
-         */
-        boost::optional<Status> getOperationStatus();
+        Status wait();
 
-        /**
-         * If the currently pending operation has completed, invoke 'callback' with the associated
-         * status. Otherwise, enqueue 'callback' to be invoked later when the operation completes.
-         */
-        void getOperationStatus(Ticket&& ticket, TicketCallback&& callback);
-
-        /**
-         * Perform work on behalf of this or other sessions to advance the state of pending
-         * operations. If the zero-argument form of getOperationStatus returns a disengaged
-         * optional, this method must be called at least once before retrying getOperationStatus to
-         * avoid potential busy-waiting.
-         */
-        void work();
+        void wait(Ticket&& ticket, TicketCallback&& callback);
 
     private:
         void _posted();
         void _complete(Status&& status);
 
         TransportLayerASIO* const _tl;
+        asio::io_service::strand _strand;
         std::unique_ptr<executor::AsyncStreamInterface> _stream;
+
+        SharedBuffer _readBuf;
 
         stdx::mutex _mutex;
         boost::optional<Status> _status;
         TicketCallback _callback;
+
+        SessionEntry _entry;
     };
 
     class ASIOTicket : public TicketImpl {
@@ -193,12 +193,18 @@ private:
         const Date_t _expiration;
     };
 
-    void _begin_accept();
+    using generic_acceptor = asio::basic_socket_acceptor<asio::generic::stream_protocol>;
+
+    void _begin_accept(generic_acceptor&);
 
     ServiceEntryPoint* const _sep;
     AtomicWord<bool> _running;
     asio::io_service _io_service;
-    std::unique_ptr<asio::ip::tcp::acceptor> _tcp_acceptor;
+    std::vector<generic_acceptor> _acceptors;
+    std::vector<stdx::thread> _permanent_workers;
+
+    mutable stdx::mutex _sessionsMutex;
+    stdx::list<std::weak_ptr<ASIOSession>> _sessions;
 };
 
 }  // namespace transport

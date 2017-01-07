@@ -37,13 +37,21 @@ namespace executor {
 
 class AsyncStream final : public AsyncStreamInterface {
 public:
+    using stream_socket = asio::generic::stream_protocol::socket;
+
     AsyncStream(asio::io_service::strand* strand);
+
+    AsyncStream(asio::io_service::strand* strand, stream_socket socket);
 
     ~AsyncStream();
 
     void connect(asio::ip::tcp::resolver::iterator iter, ConnectHandler&& connectHandler) override;
 
+    std::size_t write(asio::const_buffer buffer, std::error_code& ec) override;
+
     void write(asio::const_buffer buffer, StreamHandler&& streamHandler) override;
+
+    std::size_t read(asio::mutable_buffer buffer, std::error_code& ec);
 
     void read(asio::mutable_buffer buffer, StreamHandler&& streamHandler) override;
 
@@ -53,7 +61,7 @@ public:
 
 private:
     asio::io_service::strand* const _strand;
-    asio::ip::tcp::socket _stream;
+    asio::generic::stream_protocol::socket _stream;
     bool _connected = false;
 };
 

@@ -144,6 +144,7 @@ env.Library(
     LIBDEPS=[
         '$BUILD_DIR/mongo/base',
         '$BUILD_DIR/mongo/base/system_error',
+        '$BUILD_DIR/mongo/client/authentication',
         '$BUILD_DIR/mongo/client/client_query',
         '$BUILD_DIR/mongo/db/auth/authcommon',
         '$BUILD_DIR/mongo/db/commands/test_commands_enabled',
@@ -169,9 +170,8 @@ env.Library(
     ],
     LIBDEPS=[
         '$BUILD_DIR/mongo/base/system_error',
-        '$BUILD_DIR/mongo/client/authentication',
+        '$BUILD_DIR/mongo/util/net/network',
         '$BUILD_DIR/third_party/shim_asio',
-        'task_executor_interface',
     ]
 )
 

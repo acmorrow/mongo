@@ -49,7 +49,11 @@ public:
     void connect(asio::ip::tcp::resolver::iterator endpoints,
                  ConnectHandler&& connectHandler) override;
 
+    std::size_t write(asio::const_buffer buffer, std::error_code& ec) override;
+
     void write(asio::const_buffer buffer, StreamHandler&& streamHandler) override;
+
+    std::size_t read(asio::mutable_buffer buffer, std::error_code& ec);
 
     void read(asio::mutable_buffer buffer, StreamHandler&& streamHandler) override;
 

@@ -110,6 +110,7 @@ void ServiceEntryPointMongod::_sessionLoop(const transport::SessionHandle& sessi
     int64_t counter = 0;
 
     while (true) {
+        std::cout << "LOOP\n" << std::endl;
         // 1. Source a Message from the client (unless we are exhausting)
         if (!inExhaust) {
             inMessage.reset();

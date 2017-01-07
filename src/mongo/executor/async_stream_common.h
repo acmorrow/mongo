@@ -56,6 +56,16 @@ void destroyStream(ASIOStream* stream, bool connected) {
     }
 }
 
+template <typename ASIOStream, typename Buffer>
+std::size_t writeStream(ASIOStream* stream,
+                 bool connected,
+                 Buffer&& buffer,
+                 std::error_code& ec) {
+    invariant(connected);
+    invariant(stream->lowest_layer().non_blocking());
+    return asio::write(*stream, asio::buffer(std::forward<Buffer>(buffer)), ec);
+}
+
 template <typename ASIOStream, typename Buffer, typename Handler>
 void writeStream(ASIOStream* stream,
                  asio::io_service::strand* strand,
@@ -66,6 +76,16 @@ void writeStream(ASIOStream* stream,
     asio::async_write(*stream,
                       asio::buffer(std::forward<Buffer>(buffer)),
                       strand->wrap(std::forward<Handler>(handler)));
+}
+
+template <typename ASIOStream, typename Buffer>
+    std::size_t readStream(ASIOStream* stream,
+                bool connected,
+                Buffer&& buffer,
+                std::error_code& ec) {
+    invariant(connected);
+    invariant(stream->lowest_layer().non_blocking());
+    return asio::read(*stream, asio::buffer(std::forward<Buffer>(buffer)), ec);
 }
 
 template <typename ASIOStream, typename Buffer, typename Handler>
@@ -127,7 +147,7 @@ bool checkIfStreamIsOpen(ASIOStream* stream, bool connected) {
     // ASIO implements receive on POSIX using the 'recvmsg' system call, which returns immediately
     // if the socket is non-blocking and in a valid state, but there is no data to receive. On
     // windows, receive is implemented with WSARecv, which has the same semantics.
-    invariant(stream->non_blocking());
+    invariant(stream->lowest_layer().non_blocking());
     stream->receive(asio::buffer(buf), asio::socket_base::message_peek, ec);
     if (!ec || ec == asio::error::would_block || ec == asio::error::try_again) {
         // If the read worked or we got EWOULDBLOCK or EAGAIN (since we are in non-blocking mode),

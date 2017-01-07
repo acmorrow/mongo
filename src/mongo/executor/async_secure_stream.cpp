@@ -79,8 +79,16 @@ void AsyncSecureStream::connect(asio::ip::tcp::resolver::iterator endpoints,
         }));
 }
 
+std::size_t AsyncSecureStream::write(asio::const_buffer buffer, std::error_code& ec) {
+    return writeStream(&_stream, _connected, buffer, ec);
+}
+
 void AsyncSecureStream::write(asio::const_buffer buffer, StreamHandler&& streamHandler) {
     writeStream(&_stream, _strand, _connected, buffer, std::move(streamHandler));
+}
+
+std::size_t AsyncSecureStream::read(asio::mutable_buffer buffer, std::error_code& ec) {
+    return readStream(&_stream, _connected, buffer, ec);
 }
 
 void AsyncSecureStream::read(asio::mutable_buffer buffer, StreamHandler&& streamHandler) {

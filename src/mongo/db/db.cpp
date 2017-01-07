@@ -117,6 +117,7 @@
 #include "mongo/stdx/memory.h"
 #include "mongo/stdx/thread.h"
 #include "mongo/transport/transport_layer_legacy.h"
+#include "mongo/transport/transport_layer_asio.h"
 #include "mongo/util/assert_util.h"
 #include "mongo/util/cmdline_utils/censor_cmdline.h"
 #include "mongo/util/concurrency/task.h"
@@ -475,6 +476,8 @@ ExitCode _initAndListen(int listenPort) {
 
     // Create, start, and attach the TL
     auto transportLayer = stdx::make_unique<transport::TransportLayerLegacy>(options, sepPtr);
+    auto TLA = std::make_unique<transport::TransportLayerASIO>(sepPtr);
+
     auto res = transportLayer->setup();
     if (!res.isOK()) {
         error() << "Failed to set up listener: " << res;
@@ -713,6 +716,12 @@ ExitCode _initAndListen(int listenPort) {
     startupOpCtx.reset();
 
     auto start = getGlobalServiceContext()->addAndStartTransportLayer(std::move(transportLayer));
+    if (!start.isOK()) {
+        error() << "Failed to start the listener: " << start.toString();
+        return EXIT_NET_ERROR;
+    }
+
+    start = getGlobalServiceContext()->addAndStartTransportLayer(std::move(TLA));
     if (!start.isOK()) {
         error() << "Failed to start the listener: " << start.toString();
         return EXIT_NET_ERROR;

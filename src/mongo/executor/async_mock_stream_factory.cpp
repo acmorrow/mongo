@@ -137,6 +137,10 @@ void AsyncMockStreamFactory::MockStream::connect(asio::ip::tcp::resolver::iterat
     });
 }
 
+std::size_t AsyncMockStreamFactory::MockStream::write(asio::const_buffer buf, std::error_code& ec) {
+    MONGO_UNREACHABLE
+}
+
 void AsyncMockStreamFactory::MockStream::write(asio::const_buffer buf,
                                                StreamHandler&& writeHandler) {
     stdx::unique_lock<stdx::mutex> lk(_mutex);
@@ -162,6 +166,10 @@ void AsyncMockStreamFactory::MockStream::cancel() {
     }
 
     _state = kCanceled;
+}
+
+std::size_t AsyncMockStreamFactory::MockStream::read(asio::mutable_buffer buf, std::error_code& ec) {
+    MONGO_UNREACHABLE;
 }
 
 void AsyncMockStreamFactory::MockStream::read(asio::mutable_buffer buf,
