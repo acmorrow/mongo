@@ -43,7 +43,6 @@
 #include "mongo/logger/rotatable_file_manager.h"
 #include "mongo/util/assert_util.h"
 #include "mongo/util/concurrency/thread_name.h"
-#include "mongo/util/concurrency/threadlocal.h"
 #include "mongo/util/scopeguard.h"
 #include "mongo/util/stacktrace.h"
 #include "mongo/util/text.h"

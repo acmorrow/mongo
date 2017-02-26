@@ -143,7 +143,6 @@ if use_system_version_of_library("boost"):
             SYSLIBDEPS=[
                 env['LIBDEPS_BOOST_PROGRAM_OPTIONS_SYSLIBDEP'],
                 env['LIBDEPS_BOOST_FILESYSTEM_SYSLIBDEP'],
-                env['LIBDEPS_BOOST_THREAD_SYSLIBDEP'],
                 env['LIBDEPS_BOOST_SYSTEM_SYSLIBDEP'],
                 env['LIBDEPS_BOOST_IOSTREAMS_SYSLIBDEP'],
                 env['LIBDEPS_BOOST_CHRONO_SYSLIBDEP'],
@@ -158,7 +157,6 @@ else:
         LIBDEPS=[
             (boostDirectory + '/boost_program_options', libdeps.dependency.Interface),
             (boostDirectory + '/boost_filesystem', libdeps.dependency.Interface),
-            (boostDirectory + '/boost_thread', libdeps.dependency.Interface),
             (boostDirectory + '/boost_system', libdeps.dependency.Interface),
             (boostDirectory + '/boost_chrono', libdeps.dependency.Interface),
             (boostDirectory + '/boost_iostreams', libdeps.dependency.Interface),
