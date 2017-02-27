@@ -742,6 +742,9 @@ env_vars.Add('SHCXXFLAGS',
     help='Sets flags for the C++ compiler when building shared libraries',
     converter=variable_shlex_converter)
 
+env_vars.Add('SHELL',
+    help='Pick the shell to use when spawning commands')
+
 env_vars.Add('SHLINKFLAGS',
     help='Sets flags for the linker when building shared libraries',
     converter=variable_shlex_converter)
