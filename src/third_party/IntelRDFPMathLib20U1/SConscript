@@ -339,3 +339,33 @@ env.Library(
     source=source_files,
     LIBS=libs,
 )
+
+readtest = env.Program(
+    target='intel_decimal128_readtest',
+    source=[
+        'TESTS/readtest.c',
+    ],
+    LIBDEPS=[
+        'intel_decimal128',
+    ],
+    LIBS=libs,
+)
+
+readtest_input = env.Install(
+    '.',
+    source=['TESTS/readtest.in'],
+)
+
+readtest_wrapper = env.Substfile(
+    'intel_decimal128_readtest_wrapper.py.in',
+    SUBST_DICT={
+        '@readtest_program@' : readtest[0].name,
+        '@readtest_input@' : readtest_input[0].name,
+    },
+)
+
+if not env.TargetOSIs('windows'):
+    env.AddPostAction(readtest_wrapper[0], Chmod(readtest_wrapper[0], 'oug+x'))
+env.Depends(readtest_wrapper, [readtest, readtest_input])
+
+env.RegisterUnitTest(str(readtest_wrapper[0].name))
