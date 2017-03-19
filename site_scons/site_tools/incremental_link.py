@@ -29,23 +29,22 @@ def _make_builder_softprecious(env, builder):
         builder.action,
     ])
 
-def generate(env, msvc):
+def generate(env):
     builders = env['BUILDERS']
     for builder in ('Program', 'SharedLibrary', 'LoadableModule'):
         _make_builder_softprecious(env, builders[builder])
 
-    env.Append(
-        LINKFLAGS=(
-            msvc() and \
-            ["/INCREMENTAL"] or \
-            [
-                "-fuse-ld=gold",
-                "-fno-use-linker-plugin",
-                "-Wl,-z,norelro",
-                "-Wl,--incremental"
-            ]
-        )
-    )
-
 def exists(env):
-    return true
+    # By default, the windows linker is incremental. Unless overridden in the environment
+    # try it out.
+    if env.TargetOSIs('windows') and not "/INCREMENTAL:NO" in env['LINKFLAGS']:
+        return True
+
+    # On posix platofrms
+    if env.TargetOSIs('posix') and \
+       not env.TargetOSIs('darwin') and \
+       "-fuse-ld=gold" in env['LINKFLAGS'] and \
+       "-Wl,--incremental" in env['LINKFLAGS']:
+        return True
+
+    return False

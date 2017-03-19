@@ -522,15 +522,6 @@ add_option('git-decider',
     type="choice",
 )
 
-add_option('incremental-link',
-    choices=['auto', 'on', 'off'],
-    const="on",
-    default='auto',
-    help='Use incremental link',
-    nargs='?',
-    type='choice',
-)
-
 try:
     with open("version.json", "r") as version_fp:
         version_data = json.load(version_fp)
@@ -1374,12 +1365,6 @@ if get_option('git-decider') == 'on':
     git_decider = Tool('git_decider')
     if git_decider.exists(env):
         git_decider(env)
-
-incremental_link = get_option('incremental-link')
-if incremental_link == 'auto':
-    incremental_link = not has_option('release')
-elif incremental_link == 'on':
-    env.Tool('incremental_link', msvc = lambda: env.ToolchainIs('msvc'))
 
 # On non-windows platforms, we may need to differentiate between flags being used to target an
 # executable (like -fPIE), vs those being used to target a (shared) library (like -fPIC). To do so,
@@ -3014,6 +2999,10 @@ should_dagger = ( is_running_os('osx') or is_running_os('linux')  ) and "dagger"
 
 if should_dagger:
     env.Tool("dagger")
+
+incremental_link = Tool('incremental_link')
+if incremental_link.exists(env):
+    incremental_link(env)
 
 def checkErrorCodes():
     import buildscripts.errorcodes as x
