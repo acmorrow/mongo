@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!@readtest_python_interpreter@
 import os
 import subprocess
 
