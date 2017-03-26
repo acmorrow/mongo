@@ -418,7 +418,7 @@ add_option('variables-files',
 link_model_choices = ['auto', 'object', 'static', 'dynamic', 'dynamic-strict']
 add_option('link-model',
     choices=link_model_choices,
-    default='object',
+    default='static',
     help='Select the linking model for the project',
     type='choice'
 )
@@ -1173,16 +1173,13 @@ if has_option("cache"):
 # model that works across all of our platforms. We would like to ensure that all of our
 # released artifacts are built with the same known-good-everywhere model.
 link_model = get_option('link-model')
-
 if link_model == "auto":
-    link_model = "object" if (env.TargetOSIs('windows') or has_option("release")) else "static"
-elif has_option("release") and link_model != "object":
-    env.FatalError("The link model for release builds is required to be 'object'")
+    link_model = "static" if (env.TargetOSIs('windows') or has_option("release")) else "dynamic"
 
 # The only link model currently supported on Windows is 'object', since there is no equivalent
 # to --whole-archive.
-if env.TargetOSIs('windows') and link_model != 'object':
-    env.FatalError("Windows builds must use the 'object' link model");
+if env.TargetOSIs('windows') and link_model not in ['object', 'static']:
+    env.FatalError("Windows builds must use the 'object' or 'static' link models");
 
 # The 'object' mode for libdeps is enabled by setting _LIBDEPS to $_LIBDEPS_OBJS. The other two
 # modes operate in library mode, enabled by setting _LIBDEPS to $_LIBDEPS_LIBS.
@@ -1361,25 +1358,32 @@ if env['_LIBDEPS'] == '$_LIBDEPS_OBJS':
     env['RANLIBCOM'] = noop_action
     env['RANLIBCOMSTR'] = 'Skipping ranlib for $TARGET'
 
-libdeps.setup_environment(env, emitting_shared=(link_model.startswith("dynamic")))
-
 if env.TargetOSIs('linux', 'freebsd', 'openbsd'):
     env['LINK_LIBGROUP_START'] = '-Wl,--start-group'
     env['LINK_LIBGROUP_END'] = '-Wl,--end-group'
-    env['LINK_WHOLE_ARCHIVE_START'] = '-Wl,--whole-archive'
-    env['LINK_WHOLE_ARCHIVE_END'] = '-Wl,--no-whole-archive'
+    env['LINK_WHOLE_ARCHIVE_LIB_START'] = '-Wl,--whole-archive'
+    env['LINK_WHOLE_ARCHIVE_LIB_SEPARATOR'] = ' '
+    env['LINK_WHOLE_ARCHIVE_LIB_END'] = '-Wl,--no-whole-archive'
 elif env.TargetOSIs('darwin'):
     env['LINK_LIBGROUP_START'] = ''
     env['LINK_LIBGROUP_END'] = ''
-    env['LINK_WHOLE_ARCHIVE_START'] = '-Wl,-all_load'
-    env['LINK_WHOLE_ARCHIVE_END'] = '-Wl,-noall_load'
+    env['LINK_WHOLE_ARCHIVE_LIB_START'] = '-force_load'
+    env['LINK_WHOLE_ARCHIVE_LIB_SEPARATOR'] = ' '
+    env['LINK_WHOLE_ARCHIVE_LIB_END'] = ''
 elif env.TargetOSIs('solaris'):
     env['LINK_LIBGROUP_START'] = '-z rescan-start'
     env['LINK_LIBGROUP_END'] = '-z rescan-end'
-    env['LINK_WHOLE_ARCHIVE_START'] = '-z allextract'
-    env['LINK_WHOLE_ARCHIVE_END'] = '-z defaultextract'
+    env['LINK_WHOLE_ARCHIVE_LIB_START'] = '-z allextract'
+    env['LINK_WHOLE_ARCHIVE_LIB_SEPARATOR'] = ' '
+    env['LINK_WHOLE_ARCHIVE_LIB_END'] = '-z defaultextract'
+elif env.TargetOSIs('windows'):
+    env['LINK_WHOLE_ARCHIVE_LIB_START'] = '/WHOLEARCHIVE'
+    env['LINK_WHOLE_ARCHIVE_LIB_SEPARATOR'] = ':'
+    env['LINK_WHOLE_ARCHIVE_LIB_END'] = ''
 
 # ---- other build setup -----
+libdeps.setup_environment(env, emitting_shared=(link_model.startswith("dynamic")))
+
 if debugBuild:
     env.SetConfigHeaderDefine("MONGO_CONFIG_DEBUG_BUILD")
 else:

@@ -358,26 +358,38 @@ def setup_environment(env, emitting_shared=False):
     except KeyError:
         env['_LIBDEPS'] = '$_LIBDEPS_LIBS'
 
-    env['_LIBDEPS_TAGS'] = expand_libdeps_tags
+    env['_LIBDEPS_MAP_STR'] = lambda x: map(str, x)
 
     env['_LIBDEPS_LIBS'] = get_libdeps
 
-    env['_LIBDEPS_OBJS'] = get_libdeps_objs
+    env['_LINK_WHOLE_ARCHIVE_LIB_START'] = '$LINK_WHOLE_ARCHIVE_LIB_START$LINK_WHOLE_ARCHIVE_LIB_SEPARATOR'
+    if env['LINK_WHOLE_ARCHIVE_LIB_END']:
+        env['_LINK_WHOLE_ARCHIVE_LIB_END'] = '$LINK_WHOLE_ARCHIVE_LIB_SEPARATOR$LINK_WHOLE_ARCHIVE_LIB_END'
+    else:
+        env['_LINK_WHOLE_ARCHIVE_LIB_END'] = '$LINK_WHOLE_ARCHIVE_LIB_END'
+
+    env['_LIBDEPS_TAGS'] = expand_libdeps_tags
+    env['_LIBDEPS_GET_LIBS'] = get_libdeps
+    env['_LIBDEPS_GET_OBJS'] = get_libdeps_objs
+    env['_LIBDEPS_WHOLE_LIBS'] = '${_concat(_LINK_WHOLE_ARCHIVE_LIB_START, __env__.subst(_LIBDEPS_GET_LIBS, target=TARGET, source=SOURCE, conv=lambda x: x), _LINK_WHOLE_ARCHIVE_LIB_END, __env__, _LIBDEPS_MAP_STR)}'
+    env['_LIBDEPS_OBJS'] = '$_LIBDEPS_GET_OBJS'
     env['_SYSLIBDEPS'] = get_syslibdeps
-    env['_SHLIBDEPS'] = '$SHLIBDEP_GROUP_START ${_concat(SHLIBDEPPREFIX, __env__.subst(_LIBDEPS, target=TARGET, source=SOURCE), SHLIBDEPSUFFIX, __env__, target=TARGET, source=SOURCE)} $SHLIBDEP_GROUP_END'
 
     env[libdeps_env_var] = SCons.Util.CLVar()
     env[syslibdeps_env_var] = SCons.Util.CLVar()
+
     env.Append(LIBEMITTER=libdeps_emitter)
     if emitting_shared:
+        env['_LIBDEPS_LIBS'] = '$_LIBDEPS_GET_LIBS'
         env.Append(
             PROGEMITTER=shlibdeps_emitter,
             SHLIBEMITTER=shlibdeps_emitter)
     else:
+        env['_LIBDEPS_LIBS'] = '$LINK_LIBGROUP_START $_LIBDEPS_WHOLE_LIBS $LINK_LIBGROUP_END'
         env.Append(
             PROGEMITTER=libdeps_emitter,
             SHLIBEMITTER=libdeps_emitter)
-    env.Prepend(_LIBFLAGS=' $_LIBDEPS_TAGS $LINK_WHOLE_ARCHIVE_START $LINK_LIBGROUP_START $_LIBDEPS $LINK_LIBGROUP_END $LINK_WHOLE_ARCHIVE_END $_SYSLIBDEPS ')
+    env.Prepend(_LIBFLAGS='$_LIBDEPS $_SYSLIBDEPS ')
     for builder_name in ('Program', 'SharedLibrary', 'LoadableModule'):
         try:
             update_scanner(env['BUILDERS'][builder_name])
