@@ -201,7 +201,6 @@ wtlib = env.Library(
     source=wtsources,
     LIBDEPS=[
         'wiredtiger_checksum',
-        '$BUILD_DIR/third_party/shim_allocator',
         '$BUILD_DIR/third_party/shim_snappy',
         '$BUILD_DIR/third_party/shim_zlib',
         '$BUILD_DIR/third_party/shim_zstd',

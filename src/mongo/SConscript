@@ -174,7 +174,6 @@ baseEnv.Library(
     LIBDEPS=[
         '$BUILD_DIR/third_party/murmurhash3/murmurhash3',
         '$BUILD_DIR/third_party/shim_abseil',
-        '$BUILD_DIR/third_party/shim_allocator',
         '$BUILD_DIR/third_party/shim_boost',
         '$BUILD_DIR/third_party/shim_fmt',
         '$BUILD_DIR/third_party/shim_intel_decimal128',
@@ -197,7 +196,9 @@ env.Library(
         'util/boost_assert_shim.cpp'
     ],
     # NOTE: This library *must not* depend on any mongodb code
-    LIBDEPS=[],
+    # than the allocator shim.
+    LIBDEPS=[
+    ],
 )
 
 js_engine_ver = get_option("js-engine") if get_option("server-js") == "on" else "none"

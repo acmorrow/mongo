@@ -350,7 +350,6 @@ quick_exit_env.Library(
     LIBDEPS=[
         # NOTE: You *must not* add any other library dependencies to
         # the quick_exit library
-        "$BUILD_DIR/third_party/shim_allocator",
     ]
 )
 env.Library(
