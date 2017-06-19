@@ -32,6 +32,7 @@
 #include "mongo/db/jsobj.h"
 #include "mongo/platform/atomic_word.h"
 #include "mongo/platform/basic.h"
+#include "mongo/stdx/new.h"
 #include "mongo/util/concurrency/spin_lock.h"
 #include "mongo/util/net/message.h"
 #include "mongo/util/processinfo.h"
@@ -80,14 +81,12 @@ public:
 private:
     void _checkWrap();
 
-    // todo: there will be a lot of cache line contention on these.  need to do something
-    //       else eventually.
-    AtomicUInt32 _insert;
-    AtomicUInt32 _query;
-    AtomicUInt32 _update;
-    AtomicUInt32 _delete;
-    AtomicUInt32 _getmore;
-    AtomicUInt32 _command;
+    alignas(stdx::hardware_destructive_interference_size) AtomicUInt32 _insert;
+    alignas(stdx::hardware_destructive_interference_size) AtomicUInt32 _query;
+    alignas(stdx::hardware_destructive_interference_size) AtomicUInt32 _update;
+    alignas(stdx::hardware_destructive_interference_size) AtomicUInt32 _delete;
+    alignas(stdx::hardware_destructive_interference_size) AtomicUInt32 _getmore;
+    alignas(stdx::hardware_destructive_interference_size) AtomicUInt32 _command;
 };
 
 extern OpCounters globalOpCounters;
@@ -103,12 +102,12 @@ public:
     void append(BSONObjBuilder& b);
 
 private:
-    AtomicInt64 _physicalBytesIn{0};
-    AtomicInt64 _physicalBytesOut{0};
-    AtomicInt64 _logicalBytesIn{0};
-    AtomicInt64 _logicalBytesOut{0};
+    alignas(stdx::hardware_destructive_interference_size) AtomicInt64 _physicalBytesIn{0};
+    alignas(stdx::hardware_destructive_interference_size) AtomicInt64 _physicalBytesOut{0};
+    alignas(stdx::hardware_destructive_interference_size) AtomicInt64 _logicalBytesIn{0};
+    alignas(stdx::hardware_destructive_interference_size) AtomicInt64 _logicalBytesOut{0};
 
-    AtomicInt64 _requests{0};
+    alignas(stdx::hardware_destructive_interference_size) AtomicInt64 _requests{0};
 };
 
 extern NetworkCounter networkCounter;
