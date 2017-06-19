@@ -39,6 +39,7 @@
 #include "mongo/platform/atomic_word.h"
 #include "mongo/stdx/memory.h"
 #include "mongo/stdx/mutex.h"
+#include "mongo/stdx/new.h"
 #include "mongo/util/assert_util.h"
 
 namespace mongo {
@@ -100,6 +101,10 @@ struct Partitioner {
 
 namespace partitioned_detail {
 
+struct AlignedMutex {
+    alignas(stdx::hardware_destructive_interference_size) stdx::mutex mutex;
+};
+
 template <typename Key, typename Value>
 Key getKey(const std::pair<Key, Value>& pair) {
     return std::get<0>(pair);
@@ -111,10 +116,10 @@ Key getKey(const Key& key) {
 }
 
 inline std::vector<stdx::unique_lock<stdx::mutex>> lockAllPartitions(
-    std::vector<stdx::mutex>& mutexes) {
-    std::vector<stdx::unique_lock<stdx::mutex>> result;
+    std::vector<AlignedMutex>& mutexes) {
+    std::vector<stdx::unique_lock<stdx::mutex>> result(mutexes.size());
     std::transform(mutexes.begin(), mutexes.end(), std::back_inserter(result), [](auto&& mutex) {
-        return stdx::unique_lock<stdx::mutex>{mutex};
+        return stdx::unique_lock<stdx::mutex>{mutex.mutex};
     });
     return result;
 }
@@ -282,7 +287,7 @@ public:
          * use GuardedAssociativeContainer, or acquire them in ascending order.
          */
         OnePartition(Partitioned& partitioned, PartitionId partitionId)
-            : _partitionLock(partitioned._mutexes[partitionId]),
+            : _partitionLock(partitioned._mutexes[partitionId].mutex),
               _partitioned(&partitioned),
               _id(partitionId) {}
 
@@ -380,7 +385,23 @@ public:
 private:
     // These two vectors parallel each other, but we keep them separate so that we can return an
     // iterator over `_partitions` from within All.
-    mutable std::vector<stdx::mutex> _mutexes;
+    mutable std::vector<partitioned_detail::AlignedMutex> _mutexes;
+
+    // TODO: It would be good to also align these, but that would
+    // require writing our own iterator to keep the return types
+    // sane. If and when we want to do that, we could also switch to
+    // pairing up the mutexes and the associative containers on their
+    // own cache lines:
+    //
+    // struct Pair {
+    //     std::mutex _lock;
+    //     AssociativeContainer _data;
+    // };
+    //
+    // struct AlignedPair {
+    //     alignas(stdx::hardware_destructive_interference_size) Pair _pair;
+    // };
+
     std::vector<AssociativeContainer> _partitions;
 };
 }  // namespace mongo
