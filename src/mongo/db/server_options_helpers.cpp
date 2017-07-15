@@ -216,7 +216,7 @@ Status addGeneralServerOptions(moe::OptionSection* options) {
                             moe::String,
                             "sets the service executor implementation")
         .hidden()
-        .setDefault(moe::Value("synchronous"));
+        .setDefault(moe::Value("silly"));
 
     options
         ->addOptionChaining(
@@ -821,7 +821,7 @@ Status storeServerOptions(const moe::Environment& params) {
             return {ErrorCodes::BadValue,
                     "Cannot specify a serviceExecutor with the legacy transportLayer"};
         }
-        const auto valid = {"synchronous"_sd, "fixedForTesting"_sd};
+        const auto valid = {"synchronous"_sd, "fixedForTesting"_sd, "silly"_sd};
         auto value = params["net.serviceExecutor"].as<std::string>();
         if (std::find(valid.begin(), valid.end(), value) == valid.end()) {
             return {ErrorCodes::BadValue, "Unsupported value for serviceExecutor"};
