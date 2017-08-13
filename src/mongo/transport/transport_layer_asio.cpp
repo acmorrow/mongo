@@ -187,6 +187,14 @@ Status TransportLayerASIO::setup() {
         GenericAcceptor acceptor(*_ioContext);
         acceptor.open(endpoint.protocol());
         acceptor.set_option(GenericAcceptor::reuse_address(true));
+
+        if (_listenerOptions.async) {
+            acceptor.non_blocking(true, ec);
+            if (ec) {
+                return errorCodeToStatus(ec);
+            }
+        }
+
         acceptor.bind(endpoint, ec);
         if (ec) {
             return errorCodeToStatus(ec);
