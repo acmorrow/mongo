@@ -413,7 +413,10 @@ void ServiceStateMachine::_runNextInGuard(ThreadGuard& guard) {
                 MONGO_UNREACHABLE;
         }
 
-        if ((_counter++ & 0xf) == 0) {
+        // If we are not in sync mode, then we don't want to drop our
+        // memory cache, since we can continue to do useful work
+        // within the reactor. Only play this game in sync mode.
+        if (_sync && ((_counter++ & 0xf) == 0)) {
             markThreadIdle();
         }
 
