@@ -30,6 +30,7 @@
 
 #include <functional>
 #include <string>
+#include <vector>
 
 #include "mongo/config.h"
 #include "mongo/db/server_options.h"
@@ -73,6 +74,7 @@ class TransportLayerASIO final : public TransportLayer {
 
 public:
     struct Options {
+        Options() = default;
         explicit Options(const ServerGlobalParams* params);
 
         int port = ServerGlobalParams::DefaultDBPort;  // port to bind to
@@ -130,7 +132,7 @@ private:
     std::vector<GenericAcceptor> _acceptors;
 
     // Only used if _listenerOptions.async is false.
-    stdx::thread _listenerThread;
+    std::vector<stdx::thread> _listenerThreads;
 
     std::shared_ptr<asio::io_context> _ioContext;
 #ifdef MONGO_CONFIG_SSL

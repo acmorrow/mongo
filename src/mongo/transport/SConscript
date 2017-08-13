@@ -206,8 +206,9 @@ env.CppUnitTest(
 )
 
 env.CppUnitTest(
-    target='transport_layer_legacy_test',
+    target='transport_layer_test',
     source=[
+        'transport_layer_asio_test.cpp',
         'transport_layer_legacy_test.cpp',
     ],
     LIBDEPS=[
@@ -216,4 +217,3 @@ env.CppUnitTest(
         '$BUILD_DIR/mongo/db/service_context_noop_init',
     ],
 )
-
