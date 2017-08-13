@@ -175,7 +175,6 @@ Status ServiceExecutorAdaptive::shutdown() {
 
 Status ServiceExecutorAdaptive::schedule(ServiceExecutorAdaptive::Task task, ScheduleFlags flags) {
     auto scheduleTime = _tickSource->getTicks();
-    auto pending = _tasksQueued.addAndFetch(1);
 
     _ioContext->post([ this, task = std::move(task), scheduleTime ] {
         _tasksQueued.subtractAndFetch(1);
@@ -197,7 +196,10 @@ Status ServiceExecutorAdaptive::schedule(ServiceExecutorAdaptive::Task task, Sch
     _lastScheduleTimer.reset();
     _totalQueued.addAndFetch(1);
 
-    if (_isStarved(pending) && !(flags & DeferredTask)) {
+    // The order matters here - we want to short circuit the starved
+    // check and the increment of tasksQueued for deferred tasks,
+    // since those shouldn't induce new thread creation.
+    if (!(flags & DeferredTask) && _isStarved(_tasksQueued.addAndFetch(1))) {
         _scheduleCondition.notify_one();
     }
 
