@@ -246,9 +246,9 @@ class cpp_generator(base_generator):
         predicate_declarations = ';\n        '.join(
             'static bool is%s(Error err)' % ec[0] for ec in self.error_classes)
 
-        open(self.cpp_header, 'wb').write(self.header_template % dict(
+        open(self.cpp_header, 'wb').write((self.header_template % dict(
                 error_code_enum_declarations=enum_declarations,
-                error_code_class_predicate_declarations=predicate_declarations))
+                error_code_class_predicate_declarations=predicate_declarations)).encode())
 
     def generate_source(self):
         symbol_to_string_cases = ';\n        '.join(
@@ -260,11 +260,11 @@ class cpp_generator(base_generator):
             'case %s: return %s' % (ec[0], ec[0]) for ec in self.error_codes)
         predicate_definitions = '\n    '.join(
             self.generate_error_class_predicate_definition(*ec) for ec in self.error_classes)
-        open(self.cpp_source, 'wb').write(self.source_template % dict(
+        open(self.cpp_source, 'wb').write((self.source_template % dict(
                 symbol_to_string_cases=symbol_to_string_cases,
                 string_to_symbol_cases=string_to_symbol_cases,
                 int_to_symbol_cases=int_to_symbol_cases,
-                error_code_class_predicate_definitions=predicate_definitions))
+                error_code_class_predicate_definitions=predicate_definitions)).encode())
 
     def generate_error_class_predicate_definition(self, class_name, code_names):
         cases = '\n        '.join('case %s:' % c for c in code_names)
