@@ -96,6 +96,14 @@ add_option('prefix',
     help='installation prefix',
 )
 
+add_option('install-mode',
+    choices=['legacy', 'hygienic'],
+    default='legacy',
+    help='select type of installation',
+    nargs=1,
+    type='choice',
+)
+
 add_option('nostrip',
     help='do not strip installed binaries',
     nargs=0,
