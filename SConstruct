@@ -3159,6 +3159,33 @@ def doConfigure(myenv):
 
 env = doConfigure( env )
 
+# TODO: Later, this should live somewhere more graceful.
+if get_option('install-mode') == 'hygienic':
+    env.Tool('auto_install_binaries')
+    if env['PLATFORM'] == 'posix':
+        env.AppendUnique(
+            RPATH=[
+                env.Literal('\\$$ORIGIN/../lib')
+            ],
+            LINKFLAGS=[
+                '-Wl,-z,origin',
+                '-Wl,--enable-new-dtags',
+            ],
+            SHLINKFLAGS=[
+                # -h works for both the sun linker and the gnu linker.
+                "-Wl,-h,${TARGET.file}",
+            ]
+        )
+    elif env['PLATFORM'] == 'darwin':
+        env.AppendUnique(
+            LINKFLAGS=[
+                '-Wl,-rpath,@loader_path/../lib'
+            ],
+            SHLINKFLAGS=[
+                "-Wl,-install_name,@loader_path/../lib/${TARGET.file}",
+            ],
+        )
+
 # Now that we are done with configure checks, enable icecream, if available.
 env.Tool('icecream')
 
