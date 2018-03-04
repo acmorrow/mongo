@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import os
 import sys
 
@@ -39,7 +41,7 @@ def jsToHeader(target, source):
 
     text = '\n'.join(h)
 
-    with open(outFile, 'wb') as out:
+    with open(outFile, 'w') as out:
         try:
             out.write(text)
         finally:
@@ -48,7 +50,7 @@ def jsToHeader(target, source):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print "Must specify [target] [source] "
+        print("Must specify [target] [source] ")
         sys.exit(1)
 
     jsToHeader(sys.argv[1], sys.argv[2:])

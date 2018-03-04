@@ -122,7 +122,7 @@ def getprocesslist():
     raw = ""
     try:
         raw = execsys( "/bin/ps axww" )[0]
-    except Exception,e:
+    except Exception as e:
         print( "can't get processlist: " + str( e ) )
 
     r = re.compile( "[\r\n]+" )
@@ -145,7 +145,7 @@ def choosePathExist( choices , default=None):
     return default
 
 def filterExists(paths):
-    return filter(os.path.exists, paths)
+    return list(filter(os.path.exists, paths))
 
 def ensureDir( name ):
     d = os.path.dirname( name )
@@ -176,7 +176,7 @@ def didMongodStart( port=27017 , timeout=20 ):
         try:
             checkMongoPort( port )
             return True
-        except Exception,e:
+        except Exception as e:
             print( e )
             timeout = timeout - 1
     return False
@@ -213,7 +213,7 @@ def find_python(min_version=(2, 5)):
         pass
 
     version = re.compile(r'[Pp]ython ([\d\.]+)', re.MULTILINE)
-    binaries = ('python27', 'python2.7', 'python26', 'python2.6', 'python25', 'python2.5', 'python')
+    binaries = ('python3', 'python27', 'python2.7', 'python26', 'python2.6', 'python25', 'python2.5', 'python')
     for binary in binaries:
         try:
             out, err = subprocess.Popen([binary, '-V'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -251,7 +251,7 @@ def run_smoke_command(*args):
 # at the position they occurred
 def replace_with_repr(unicode_error):
     offender = unicode_error.object[unicode_error.start:unicode_error.end]
-    return (unicode(repr(offender).strip("'").strip('"')), unicode_error.end)
+    return (str(repr(offender).strip("'").strip('"')), unicode_error.end)
 
 codecs.register_error('repr', replace_with_repr)
 

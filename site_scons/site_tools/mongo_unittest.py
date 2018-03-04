@@ -11,10 +11,10 @@ def register_unit_test(env, test):
     env.Alias('$UNITTEST_ALIAS', test)
 
 def unit_test_list_builder_action(env, target, source):
-    ofile = open(str(target[0]), 'wb')
+    ofile = open(str(target[0]), 'w')
     try:
         for s in _unittests:
-            print '\t' + str(s)
+            print('\t' + str(s))
             ofile.write('%s\n' % s)
     finally:
         ofile.close()

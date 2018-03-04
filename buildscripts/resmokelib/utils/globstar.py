@@ -145,7 +145,7 @@ def _list_dir(pathname):
     """
 
     try:
-        (_root, dirs, files) = os.walk(pathname).next()
+        (_root, dirs, files) = next(os.walk(pathname))
         return (dirs, files)
     except StopIteration:
         return None  # 'pathname' directory does not exist

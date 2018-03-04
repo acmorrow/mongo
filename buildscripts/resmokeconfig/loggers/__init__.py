@@ -21,7 +21,7 @@ def _get_named_loggers():
     named_loggers = {}
 
     try:
-        (root, _dirs, files) = os.walk(dirname).next()
+        (root, _dirs, files) = next(os.walk(dirname))
         for filename in files:
             (short_name, ext) = os.path.splitext(filename)
             if ext in (".yml", ".yaml"):

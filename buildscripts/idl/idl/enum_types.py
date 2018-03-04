@@ -29,11 +29,11 @@ from . import common
 from . import syntax
 from . import writer
 
+ABC = ABCMeta(str('ABC'), (object,), {'__slots__': ()})
 
-class EnumTypeInfoBase(object):
+
+class EnumTypeInfoBase(ABC):
     """Base type for enumeration type information."""
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, idl_enum):
         # type: (Union[syntax.Enum,ast.Enum]) -> None
@@ -115,8 +115,6 @@ class EnumTypeInfoBase(object):
 class _EnumTypeInt(EnumTypeInfoBase):
     """Type information for integer enumerations."""
 
-    __metaclass__ = ABCMeta
-
     def __init__(self, idl_enum):
         # type: (Union[syntax.Enum,ast.Enum]) -> None
         super(_EnumTypeInt, self).__init__(idl_enum)
@@ -195,8 +193,6 @@ def _get_constant_enum_name(idl_enum, enum_value):
 
 class _EnumTypeString(EnumTypeInfoBase):
     """Type information for string enumerations."""
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, idl_enum):
         # type: (Union[syntax.Enum,ast.Enum]) -> None

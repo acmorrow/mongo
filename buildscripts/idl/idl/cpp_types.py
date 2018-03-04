@@ -28,6 +28,7 @@ from . import writer
 
 _STD_ARRAY_UINT8_16 = 'std::array<std::uint8_t,16>'
 
+ABC = ABCMeta(str('ABC'), (object,), {'__slots__': ()})
 
 def is_primitive_scalar_type(cpp_type):
     # type: (unicode) -> bool
@@ -75,10 +76,8 @@ def _qualify_array_type(cpp_type):
     return "std::vector<%s>" % (cpp_type)
 
 
-class CppTypeBase(object):
+class CppTypeBase(ABC):
     """Base type for C++ Type information."""
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, field):
         # type: (ast.Field) -> None
@@ -550,10 +549,8 @@ def get_cpp_type(field):
     return cpp_type_info
 
 
-class BsonCppTypeBase(object):
+class BsonCppTypeBase(ABC):
     """Base type for custom C++ support for BSON Types information."""
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, field):
         # type: (ast.Field) -> None

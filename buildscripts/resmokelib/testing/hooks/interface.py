@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from ...logging import loggers
 from ...utils import registry
 
+import six
 
 _HOOKS = {}
 
@@ -22,12 +23,10 @@ def make_hook(class_name, *args, **kwargs):
     return _HOOKS[class_name](*args, **kwargs)
 
 
-class Hook(object):
+class Hook(six.with_metaclass(registry.make_registry_metaclass(_HOOKS), object)):
     """
     The common interface all Hooks will inherit from.
     """
-
-    __metaclass__ = registry.make_registry_metaclass(_HOOKS)
 
     REGISTERED_NAME = registry.LEAVE_UNREGISTERED
 

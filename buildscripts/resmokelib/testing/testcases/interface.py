@@ -7,6 +7,7 @@ from __future__ import absolute_import
 
 import os
 import os.path
+import six
 import unittest
 
 from ... import config
@@ -27,12 +28,10 @@ def make_test_case(test_kind, *args, **kwargs):
     return _TEST_CASES[test_kind](*args, **kwargs)
 
 
-class TestCase(unittest.TestCase):
+class TestCase(six.with_metaclass(registry.make_registry_metaclass(_TEST_CASES), unittest.TestCase)):
     """
     A test case to execute.
     """
-
-    __metaclass__ = registry.make_registry_metaclass(_TEST_CASES)
 
     REGISTERED_NAME = registry.LEAVE_UNREGISTERED
 
@@ -46,10 +45,10 @@ class TestCase(unittest.TestCase):
         if not isinstance(logger, logging.Logger):
             raise TypeError("logger must be a Logger instance")
 
-        if not isinstance(test_kind, basestring):
+        if not isinstance(test_kind, str):
             raise TypeError("test_kind must be a string")
 
-        if not isinstance(test_name, basestring):
+        if not isinstance(test_name, str):
             raise TypeError("test_name must be a string")
 
         # When the TestCase is created by the TestSuiteExecutor (through a call to make_test_case())

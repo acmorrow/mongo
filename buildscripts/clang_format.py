@@ -20,7 +20,7 @@ import sys
 import tarfile
 import tempfile
 import threading
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from distutils import spawn
 from optparse import OptionParser
 from multiprocessing import cpu_count
@@ -96,11 +96,11 @@ def get_clang_format_from_cache_and_extract(url, tarball_ext):
     num_tries = 5
     for attempt in range(num_tries):
         try:
-            resp = urllib2.urlopen(url)
+            resp = urllib.request.urlopen(url)
             with open(temp_tar_file, 'wb') as f:
               f.write(resp.read())
             break
-        except urllib2.URLError:
+        except urllib.error.URLError:
             if attempt == num_tries - 1:
                 raise
             continue
@@ -436,7 +436,7 @@ def reformat_branch(clang_format, commit_prior_to_reformat, commit_after_reforma
 
         # Check if anything needed reformatting, and if so amend the commit
         if not repo.is_working_tree_dirty():
-            print ("Commit %s needed no reformatting" % commit_hash)
+            print("Commit %s needed no reformatting" % commit_hash)
         else:
             repo.commit(["--all", "--amend", "--no-edit"])
 

@@ -74,7 +74,7 @@ class TestBinder(testcase.IDLTestcase):
             cpp_includes:
                 - 'bar'
                 - 'foo'"""))
-        self.assertEquals(spec.globals.cpp_namespace, "something")
+        self.assertEqual(spec.globals.cpp_namespace, "something")
         self.assertListEqual(spec.globals.cpp_includes, ['bar', 'foo'])
 
     def test_type_positive(self):
