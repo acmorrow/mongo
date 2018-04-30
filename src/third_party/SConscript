@@ -256,7 +256,9 @@ if use_libunwind:
         target="shim_unwind",
         source=[
             'shim_unwind.cpp',
-        ])
+        ],
+        DWP=None,
+    )
 
 if use_system_version_of_library("fmt"):
     fmtEnv = env.Clone(
@@ -277,7 +279,9 @@ fmtEnv.Library(
     target="shim_fmt",
     source=[
         'shim_fmt.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 
 if use_system_version_of_library("pcre"):
@@ -299,7 +303,9 @@ pcreEnv.Library(
     target="shim_pcrecpp",
     source=[
         'shim_pcrecpp.cc',
-    ])
+    ],
+    DWP=None,
+)
 
 
 boostEnv = env
@@ -334,7 +340,9 @@ boostEnv.Library(
     target="shim_boost",
     source=[
         'shim_boost.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 abseilEnv = env
 if use_system_version_of_library("abseil-cpp"):
@@ -358,7 +366,9 @@ abseilEnv.Library(
     target="shim_abseil",
     source=[
         'shim_abseil.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 if use_system_version_of_library("snappy"):
     snappyEnv = env.Clone(
@@ -379,7 +389,9 @@ snappyEnv.Library(
     target="shim_snappy",
     source=[
         'shim_snappy.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 if use_system_version_of_library("zlib"):
     zlibEnv = env.Clone(
@@ -399,7 +411,9 @@ zlibEnv.Library(
     target="shim_zlib",
     source=[
         'shim_zlib.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 if use_system_version_of_library("zstd"):
     zstdEnv = env.Clone(
@@ -419,7 +433,9 @@ zstdEnv.Library(
     target="shim_zstd",
     source=[
         'shim_zstd.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 if use_system_version_of_library("google-benchmark"):
     benchmarkEnv = env.Clone(
@@ -441,7 +457,9 @@ benchmarkEnv.Library(
     target="shim_benchmark",
     source=[
         'shim_benchmark.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 if usemozjs:
     mozjsEnv = env.Clone()
@@ -456,7 +474,9 @@ if usemozjs:
         target="shim_mozjs",
         source=[
             'shim_mozjs.cpp',
-        ])
+        ],
+        DWP=None,
+    )
 
 if "tom" in env["MONGO_CRYPTO"]:
     tomcryptEnv = env.Clone()
@@ -470,7 +490,9 @@ if "tom" in env["MONGO_CRYPTO"]:
         target="shim_tomcrypt",
         source=[
             'shim_tomcrypt.cpp',
-        ])
+        ],
+        DWP=None,
+    )
 
 gperftoolsEnv = env
 if gperftoolsEnv['MONGO_ALLOCATOR'] in ["tcmalloc", "tcmalloc-experimental"]:
@@ -500,7 +522,9 @@ gperftoolsEnv.Library(
     target="shim_allocator",
     source=[
         "shim_allocator.cpp",
-    ])
+    ],
+    DWP=None,
+)
 
 
 if use_system_version_of_library("stemmer"):
@@ -521,7 +545,9 @@ stemmerEnv.Library(
     target="shim_stemmer",
     source=[
         'shim_stemmer.cpp'
-    ])
+    ],
+    DWP=None,
+)
 
 
 if use_system_version_of_library("yaml"):
@@ -542,7 +568,9 @@ yamlEnv.Library(
     target="shim_yaml",
     source=[
         'shim_yaml.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 timelibEnv = env.Clone()
 timelibEnv.InjectThirdParty(libraries=['timelib'])
@@ -556,7 +584,9 @@ timelibEnv.Library(
     target='shim_timelib',
     source=[
         'shim_timelib.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 if wiredtiger:
     if use_system_version_of_library("wiredtiger"):
@@ -577,7 +607,9 @@ if wiredtiger:
         target="shim_wiredtiger",
         source=[
             'shim_wiredtiger.cpp'
-        ])
+        ],
+        DWP=None,
+    )
 
 if use_system_version_of_library("sqlite"):
     sqliteEnv = env.Clone(
@@ -597,7 +629,9 @@ sqliteEnv.Library(
     target='shim_sqlite',
     source=[
         'shim_sqlite.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 if use_system_version_of_library("asio"):
     # Normally, we would request LIBDEPS_ASIO_SYSLIBDEP here, but on most systems, the system asio
@@ -617,27 +651,31 @@ asioEnv.Library(
     target="shim_asio",
     source=[
         'shim_asio.cpp'
-    ])
+    ],
+    DWP=None,
+)
 
 if use_system_version_of_library("intel_decimal128"):
     intelDecimal128Env = env.Clone(
-	SYSLIBDEPS=[
-	    env['LIBDEPS_INTEL_DECIMAL128_SYSLIBDEP'],
-	])
+        SYSLIBDEPS=[
+            env['LIBDEPS_INTEL_DECIMAL128_SYSLIBDEP'],
+        ])
 else:
     intelDecimal128Env = env.Clone()
     intelDecimal128Env.InjectThirdParty(libraries=['intel_decimal128'])
     intelDecimal128Env.SConscript('IntelRDFPMathLib20U1/SConscript', exports={ 'env' : intelDecimal128Env })
     intelDecimal128Env = intelDecimal128Env.Clone(
-	LIBDEPS_INTERFACE=[
-	    'IntelRDFPMathLib20U1/intel_decimal128',
-	])
+        LIBDEPS_INTERFACE=[
+            'IntelRDFPMathLib20U1/intel_decimal128',
+        ])
 
 intelDecimal128Env.Library(
     target="shim_intel_decimal128",
     source=[
-	'shim_intel_decimal128.cpp'
-    ])
+        'shim_intel_decimal128.cpp'
+    ],
+    DWP=None,
+)
 
 if use_system_version_of_library("icu"):
     icuEnv = env.Clone(
@@ -659,7 +697,9 @@ icuEnv.Library(
     target='shim_icu',
     source=[
         'shim_icu.cpp',
-    ])
+    ],
+    DWP=None,
+)
 
 if use_system_version_of_library("kms-message"):
     kmsEnv = env.Clone(
@@ -679,5 +719,6 @@ kmsEnv.Library(
     target="shim_kms_message",
     source=[
         'shim_kms_message.cpp',
-    ])
-
+    ],
+    DWP=None,
+)

@@ -144,6 +144,7 @@ env.Library(
     LIBDEPS=[
         'scripting' if serverJs else 'scripting_none',
     ],
+    DWP=None,
 )
 
 env.CppUnitTest(

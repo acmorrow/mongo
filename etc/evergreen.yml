@@ -774,7 +774,7 @@ functions:
         fi
         ${decompress} mongo-debugsymbols.tgz
         files="mongo mongod mongos"
-        file_exts="debug dSYM pdb"
+        file_exts="debug dSYM exe.pdb"
         for file_ext in $file_exts
         do
             for file in $files
@@ -3199,7 +3199,7 @@ functions:
               mv $binary_file_location $new_binary_file
             fi
             # On Windows if a .pdb symbol file exists, include it in the archive.
-            pdb_file=$(echo $binary_file_location | sed "s/\.exe/.pdb/")
+            pdb_file=$(echo $binary_file_location | sed "s/\.exe/.exe.pdb/")
             if [ -f $pdb_file ]; then
               new_pdb_file=unittest_binaries/$(echo $pdb_file | sed "s/.*\///")
               mv $pdb_file $new_pdb_file
@@ -3289,7 +3289,7 @@ functions:
           remote_dir=${remote_dir|.}
 
           # Copy mongoDB debug symbols to the remote host.
-          debug_files=$(ls *.debug *.dSYM *.pdb 2> /dev/null)
+          debug_files=$(ls *.debug *.dSYM *.pdb.exe 2> /dev/null)
           for debug_file in $debug_files
           do
             file_param="$file_param --file $debug_file"
@@ -3615,7 +3615,7 @@ tasks:
           - "buildscripts/**"
           - "*Example"
           - "*Test"
-          - "./**.pdb"
+          - "./**.exe.pdb"
           - "./**.msi"
           - "./etc/pip/**"
           - "./etc/scons/**"
@@ -3630,7 +3630,7 @@ tasks:
           - "patch_files.txt"
           - "artifacts.json"
         exclude_files:
-          - "*_test.pdb"
+          - "*_test.exe.pdb"
     - func: "upload debugsymbols"
     - command: s3.put
       params:
@@ -4756,7 +4756,7 @@ tasks:
           - "./build/**_bm"
           - "./build/**_bm.gcno"
           - "./build/**_bm.exe"
-          - "./build/**_bm.pdb"
+          - "./build/**_bm.exe.pdb"
     - command: s3.put
       params:
         aws_key: ${aws_key}

@@ -244,10 +244,10 @@ add_option('dbg',
 )
 
 add_option('separate-debug',
-    choices=['on', 'off'],
-    const='on',
-    default='off',
-    help='Produce separate debug files (only effective in --install-mode=hygienic)',
+    choices=['off', 'binaries', 'objects', 'auto'],
+    const='auto',
+    default='auto',
+    help='Produce separate debug files',
     nargs='?',
     type='choice',
 )
@@ -509,13 +509,6 @@ add_option('toolchain-root',
     help="Names a toolchain root for use with toolchain selection Variables files in etc/scons",
 )
 
-add_option('msvc-debugging-format',
-    choices=["codeview", "pdb"],
-    default="codeview",
-    help='Debugging format in debug builds using msvc. Codeview (/Z7) or Program database (/Zi). Default is codeview.',
-    type='choice',
-)
-
 add_option('use-libunwind',
     choices=["on", "off"],
     const="on",
@@ -700,6 +693,14 @@ env_vars.Add('CXXFLAGS',
     help='Sets flags for the C++ compiler',
     converter=variable_shlex_converter)
 
+env_vars.Add('DWP',
+    help='Path to the DWP tool',
+    default=WhereIs('dwp'))
+
+env_vars.Add('DSYMUTIL',
+    help='Path to the dsymutil tool',
+    default=WhereIs('dsymutil'))
+
 # Note: This probably is only really meaningful when configured via a variables file. It will
 # also override whatever the SCons platform defaults would be.
 env_vars.Add('ENV',
@@ -795,6 +796,10 @@ env_vars.Add('MONGO_GIT_HASH',
     help='Sets the githash to store in the MongoDB version information',
     default=version_data['githash'])
 
+env_vars.Add('MSPDBCMF',
+    help='Windows PDB combiner',
+    default=WhereIs('mspdbcmf.exe'))
+
 env_vars.Add('MSVC_USE_SCRIPT',
     help='Sets the script used to setup Visual Studio.')
 
@@ -808,6 +813,10 @@ env_vars.Add('OBJCOPY',
 # Exposed to be able to cross compile Android/*nix from Windows without ending up with the .exe suffix.
 env_vars.Add('PROGSUFFIX',
     help='Sets the suffix for built executable files')
+
+env_vars.Add('PYTHON',
+    help='Sets the python interpreter',
+    default=utils.find_python())
 
 env_vars.Add('RPATH',
     help='Set the RPATH for dynamic libraries and executables',
@@ -831,6 +840,10 @@ env_vars.Add('SHELL',
 env_vars.Add('SHLINKFLAGS',
     help='Sets flags for the linker when building shared libraries',
     converter=variable_shlex_converter)
+
+env_vars.Add('STRIP',
+    help='Path to the strip tool',
+    default=WhereIs('strip'))
 
 env_vars.Add('TARGET_ARCH',
     help='Sets the architecture to build for',
@@ -990,7 +1003,6 @@ envDict = dict(BUILD_ROOT=buildDir,
                MODULE_INJECTORS=dict(),
                ARCHIVE_ADDITION_DIR_MAP={},
                ARCHIVE_ADDITIONS=[],
-               PYTHON=utils.find_python(),
                SERVER_ARCHIVE='${SERVER_DIST_BASENAME}${DIST_ARCHIVE_SUFFIX}',
                UNITTEST_ALIAS='unittests',
                # TODO: Move unittests.txt to $BUILD_DIR, but that requires
@@ -1746,19 +1758,6 @@ elif env.TargetOSIs('windows'):
     # Don't send error reports in case of internal compiler error
     env.Append( CCFLAGS= ["/errorReport:none"] )
 
-    # Select debugging format. /Zi gives faster links but seem to use more memory
-    if get_option('msvc-debugging-format') == "codeview":
-        env['CCPDBFLAGS'] = "/Z7"
-    elif get_option('msvc-debugging-format') == "pdb":
-        env['CCPDBFLAGS'] = '/Zi /Fd${TARGET}.pdb'
-
-    # /DEBUG will tell the linker to create a .pdb file
-    # which WinDbg and Visual Studio will use to resolve
-    # symbols if you want to debug a release-mode image.
-    # Note that this means we can't do parallel links in the build.
-    #
-    # Please also note that this has nothing to do with _DEBUG or optimization.
-    env.Append( LINKFLAGS=["/DEBUG"] )
 
     # /MD:  use the multithreaded, DLL version of the run-time library (MSVCRT.lib/MSVCR###.DLL)
     # /MDd: Defines _DEBUG, _MT, _DLL, and uses MSVCRTD.lib/MSVCRD###.DLL
@@ -1828,10 +1827,6 @@ elif env.TargetOSIs('windows'):
             'secur32.lib',
         ],
     )
-
-# When building on visual studio, this sets the name of the debug symbols file
-if env.ToolchainIs('msvc'):
-    env['PDB'] = '${TARGET.base}.pdb'
 
 if env.TargetOSIs('posix'):
 
@@ -3631,11 +3626,11 @@ def doConfigure(myenv):
 
 env = doConfigure( env )
 
+# Enable all our separate debug magic
+env.Tool('separate_debug')
+
 # TODO: Later, this should live somewhere more graceful.
 if get_option('install-mode') == 'hygienic':
-
-    if get_option('separate-debug') == "on":
-        env.Tool('separate_debug')
 
     env.Tool('auto_install_binaries')
     env.AddSuffixMapping({
@@ -3668,7 +3663,14 @@ if get_option('install-mode') == 'hygienic':
                 "debug",
             ]
         ),
-        
+
+        ".dwp": env.SuffixMap(
+            directory="$PREFIX_DEBUG_DIR",
+            default_roles=[
+                "debug",
+            ]
+        ),
+
         ".dSYM": env.SuffixMap(
             directory="$PREFIX_DEBUG_DIR",
             default_roles=[
@@ -3726,12 +3728,6 @@ elif get_option('separate-debug') == "on":
 
 # Now that we are done with configure checks, enable icecream, if available.
 env.Tool('icecream')
-
-# If the flags in the environment are configured for -gsplit-dwarf,
-# inject the necessary emitter.
-split_dwarf = Tool('split_dwarf')
-if split_dwarf.exists(env):
-    split_dwarf(env)
 
 # Load the compilation_db tool. We want to do this after configure so we don't end up with
 # compilation database entries for the configure tests, which is weird.

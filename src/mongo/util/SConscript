@@ -249,6 +249,7 @@ env.Library(
     source=[
         'winutil.cpp',
     ],
+    DWP=None,
 )
 
 env.Library(
@@ -260,6 +261,7 @@ env.Library(
         'signal_handlers',
         '$BUILD_DIR/mongo/util/options_parser/options_parser',
     ],
+    DWP=None,
 )
 
 env.Library(

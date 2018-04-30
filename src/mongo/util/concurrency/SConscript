@@ -1,6 +1,7 @@
 # -*- mode: python -*-
 
 Import("env")
+Import("debugBuild")
 
 env = env.Clone()
 
@@ -38,6 +39,7 @@ env.Library(
     source=[
         "spin_lock.cpp",
     ],
+    DWP=(None if debugBuild else env.get('DWP', None)),
 )
 
 env.CppUnitTest(

@@ -13,7 +13,8 @@ env.Library(
         'aggregation_request',
         'expression_context',
         'pipeline',
-    ]
+    ],
+    DWP=None,
 )
 
 env.Library(
