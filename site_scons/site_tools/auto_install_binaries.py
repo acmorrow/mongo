@@ -9,10 +9,9 @@ def generate(env):
 
     suffix_map = {
         env.subst('$PROGSUFFIX') : 'bin',
-        '.dylib' : 'lib',
-        '.so' : 'lib',
-        '.dll' : 'bin',
-        '.lib' : 'lib',
+        env.subst('$LIBSUFFIX') : 'lib'
+        env.subst('$SHLIBSUFFIX') : 'bin' if env.TargetOSIs('windows') else 'lib',
+        env.subst('.wasm') : 'lib',
     }
 
     def auto_install(env, target, source, **kwargs):
@@ -44,6 +43,7 @@ def generate(env):
                 env.Alias('install', actions)
                 env.Default('install')
             env.Alias(['install-' + tag for tag in tags], actions)
+            env.Alias(['preinstall-' + tag for tag in tags], source)
 
         return actions
 

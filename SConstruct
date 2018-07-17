@@ -798,6 +798,12 @@ env_vars.Add('SHCXXFLAGS',
 env_vars.Add('SHELL',
     help='Pick the shell to use when spawning commands')
 
+env_vars.Add('SHOBJSUFFIX',
+    help='Sets the suffix for built shared objects')
+
+env_vars.Add('SHLIBSUFFIX',
+    help='Sets the suffix for built shared libraries')
+
 env_vars.Add('SHLINKFLAGS',
     help='Sets flags for the linker when building shared libraries',
     converter=variable_shlex_converter)

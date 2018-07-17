@@ -140,6 +140,7 @@ void scheduleCleanup(executor::TaskExecutor* executor,
                      NamespaceString nss,
                      OID epoch,
                      Date_t when) {
+    return;
     LOG(1) << "Scheduling cleanup on " << nss.ns() << " at " << when;
     auto swCallbackHandle = executor->scheduleWorkAt(
         when, [ executor, nss = std::move(nss), epoch = std::move(epoch) ](auto&) {
