@@ -18,6 +18,9 @@ import re
 import subprocess
 
 def exists(env):
+
+    return False
+
     if not 'AR' in env:
         return False
 

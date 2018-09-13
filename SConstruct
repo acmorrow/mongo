@@ -598,7 +598,7 @@ def decide_platform_tools():
     elif mongo_platform.is_running_os('linux', 'solaris'):
         return ['gcc', 'g++', 'gnulink', 'ar', 'gas']
     elif mongo_platform.is_running_os('darwin'):
-        return ['gcc', 'g++', 'applelink', 'ar', 'libtool', 'as', 'xcode']
+        return ['gcc', 'g++', 'applelink', 'ar', 'as', 'xcode']
     else:
         return ["default"]
 
@@ -778,6 +778,9 @@ env_vars.Add('OBJCOPY',
 # Exposed to be able to cross compile Android/*nix from Windows without ending up with the .exe suffix.
 env_vars.Add('PROGSUFFIX',
     help='Sets the suffix for built executable files')
+
+env_vars.Add('RANLIB',
+    help='Set the executable for RANLIB')
 
 env_vars.Add('RPATH',
     help='Set the RPATH for dynamic libraries and executables',
@@ -1511,7 +1514,7 @@ if env['_LIBDEPS'] == '$_LIBDEPS_LIBS':
     if not env.TargetOSIs('solaris', 'darwin', 'windows', 'openbsd'):
         env.Tool('thin_archive')
 
-if env.TargetOSIs('linux', 'freebsd', 'openbsd'):
+if env.TargetOSIs('linux', 'freebsd', 'openbsd', 'emscripten'):
     env['LINK_LIBGROUP_START'] = '-Wl,--start-group'
     env['LINK_LIBGROUP_END'] = '-Wl,--end-group'
     # NOTE: The leading and trailing spaces here are important. Do not remove them.

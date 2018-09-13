@@ -9,7 +9,7 @@ def generate(env):
 
     suffix_map = {
         env.subst('$PROGSUFFIX') : 'bin',
-        env.subst('$LIBSUFFIX') : 'lib'
+        env.subst('$LIBSUFFIX') : 'lib',
         env.subst('$SHLIBSUFFIX') : 'bin' if env.TargetOSIs('windows') else 'lib',
         env.subst('.wasm') : 'lib',
     }
