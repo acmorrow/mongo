@@ -36,16 +36,17 @@ def generate(env):
     role_dependencies = {
         'dev' : ['runtime', 'common'],
         'meta' : ['dev', 'runtime', 'common', 'debug'],
-        'debug' : ['runtime'],
         'runtime' : ['common'],
     }
 
     env.Tool('install')
 
+    # TODO: These probably need to be patterns of some sort, not just suffixes.
     suffix_map = {
         env.subst('$PROGSUFFIX') : ('bin', ['runtime',]),
         env.subst('$LIBSUFFIX') : ('lib', ['dev',]),
         '.dll' :   ('bin', ['runtime',]),
+        # TODO: The runtime libs should be in runtime, the dev symlinks in dev
         '.dylib' : ('lib', ['runtime', 'dev',]),
         '.so' :    ('lib', ['runtime', 'dev',]),
         # TODO: Debug symbols?
