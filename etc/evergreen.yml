@@ -1117,8 +1117,8 @@ functions:
 
           virtualenv_loc=$(which ${virtualenv|virtualenv})
 
-          python2_loc=$(which ${python|/opt/mongodbtoolchain/v2/bin/python2})
-          python3_loc=$(which ${python3|/opt/mongodbtoolchain/v2/bin/python3})
+          python2_loc=$(which ${python|/opt/mongodbtoolchain/v3/bin/python2})
+          python3_loc=$(which ${python3|/opt/mongodbtoolchain/v3/bin/python3})
           venv2_dir="${workdir}/venv"
           venv3_dir="${workdir}/venv_3"
           if command -V cygpath; then
@@ -1493,7 +1493,7 @@ functions:
           fi
 
           echo "Shared Cache with setting: ${scons_cache_scope}"
-          MONGO_VERSION=$MONGO_VERSION SCONS_CACHE_MODE=${scons_cache_mode|nolinked} SCONS_CACHE_SCOPE=$scons_cache_scope IS_PATCH=${is_patch} ${python|/opt/mongodbtoolchain/v2/bin/python2} buildscripts/generate_compile_expansions_shared_cache.py --out compile_expansions.yml
+          MONGO_VERSION=$MONGO_VERSION SCONS_CACHE_MODE=${scons_cache_mode|nolinked} SCONS_CACHE_SCOPE=$scons_cache_scope IS_PATCH=${is_patch} ${python|/opt/mongodbtoolchain/v3/bin/python2} buildscripts/generate_compile_expansions_shared_cache.py --out compile_expansions.yml
 
         # Legacy Expansion generation
         else
@@ -1501,7 +1501,7 @@ functions:
           # Proceed with regular expansions generated
           # This script converts the generated version string into a sanitized version string for
           # use by scons and uploading artifacts as well as information about for the scons cache.
-          MONGO_VERSION=$MONGO_VERSION SCONS_CACHE_MODE=${scons_cache_mode|nolinked} USE_SCONS_CACHE=${use_scons_cache|false} ${python|/opt/mongodbtoolchain/v2/bin/python2} buildscripts/generate_compile_expansions.py --out compile_expansions.yml
+          MONGO_VERSION=$MONGO_VERSION SCONS_CACHE_MODE=${scons_cache_mode|nolinked} USE_SCONS_CACHE=${use_scons_cache|false} ${python|/opt/mongodbtoolchain/v3/bin/python2} buildscripts/generate_compile_expansions.py --out compile_expansions.yml
         fi
 
   "apply compile expansions" :
@@ -2238,7 +2238,7 @@ functions:
         script: |
           set -o errexit
           # Set up virtualenv on remote.
-          cmds="python_loc=\$(which \${python|/opt/mongodbtoolchain/v2/bin/python2})"
+          cmds="python_loc=\$(which \${python|/opt/mongodbtoolchain/v3/bin/python2})"
           cmds="$cmds; remote_dir=${remote_dir|.}"
           cmds="$cmds; if [ \"Windows_NT\" = \"$OS\" ]; then python_loc=\$(cygpath -w \$python_loc); remote_dir=\$(cygpath -w \$remote_dir); fi"
           cmds="$cmds; virtualenv --python \$python_loc --system-site-packages ${virtualenv_dir|venv}"
@@ -2701,7 +2701,7 @@ functions:
             fi
             python=python
           else
-            python=${python|/opt/mongodbtoolchain/v2/bin/python2}
+            python=${python|/opt/mongodbtoolchain/v3/bin/python2}
           fi
           echo "python set to $(which $python)"
       - key: activate_virtualenv_3
@@ -2722,7 +2722,7 @@ functions:
             if [ "Windows_NT" = "$OS" ]; then
               python=/cygdrive/c/python/python36/python
             else
-              python=${python3|/opt/mongodbtoolchain/v2/bin/python3}
+              python=${python3|/opt/mongodbtoolchain/v3/bin/python3}
             fi
           fi
           echo "python set to $(which $python)"
@@ -2831,7 +2831,7 @@ functions:
           if [ -n "$file_list" ]; then
             for gcda_file in $file_list; do
               echo "Processing file $gcda_file"
-              /opt/mongodbtoolchain/v2/bin/gcov -i $gcda_file
+              /opt/mongodbtoolchain/v3/bin/gcov -i $gcda_file
               base_name=$(echo $gcda_file | rev | cut -f1 -d '/' | cut -f2 -d '.' | rev)
               gcov_file=$base_name.gcda.gcov
               if [ -f "$gcov_file" ]; then
@@ -3921,7 +3921,7 @@ tasks:
     - name: embedded_sdk_s3_put
       variant: embedded-sdk-ubuntu-1604-x86_64
     - name: embedded_sdk_s3_put
-      variant: embedded-sdk-macosx-10.10
+      variant: embedded-sdk-macosx-10.11
   commands:
     - command: manifest.load
     - func: "git get project"
@@ -3941,7 +3941,7 @@ tasks:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        remote_file: ${project}/embedded-sdk/embedded-sdk-macosx-10.10/${revision}/mongo-embedded-sdk-${version}.tgz
+        remote_file: ${project}/embedded-sdk/embedded-sdk-macosx-10.11/${revision}/mongo-embedded-sdk-${version}.tgz
         bucket: mciuploads
         local_file: "embedded-sdk-java-darwin.tgz"
     - func: "setup gradle signing keys"
@@ -3997,7 +3997,7 @@ tasks:
 - name: embedded_sdk_multiarch_apple_package
   depends_on:
     - name: embedded_sdk_s3_put
-      variant: embedded-sdk-macosx-10.10
+      variant: embedded-sdk-macosx-10.11
     - name: embedded_sdk_s3_put
       variant: embedded-sdk-iphoneos-11.0
     - name: embedded_sdk_s3_put
@@ -4023,7 +4023,7 @@ tasks:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        remote_file: ${project}/embedded-sdk/embedded-sdk-macosx-10.10/${revision}/mongo-embedded-sdk-${version}.tgz
+        remote_file: ${project}/embedded-sdk/embedded-sdk-macosx-10.11/${revision}/mongo-embedded-sdk-${version}.tgz
         bucket: mciuploads
         local_file: "mongo-embedded-sdk-${version}/MacOS/embedded-sdk.tgz"
 
@@ -4393,7 +4393,7 @@ tasks:
             else
                 PATH+=":${workdir}/venv_3/bin"
             fi
-            PATH+=':/opt/mongodbtoolchain/v2/bin'
+            PATH+=':/opt/mongodbtoolchain/v3/bin'
             which mypy
           )"
           echo "Found mypy executable at '$MYPY'"
@@ -7600,7 +7600,7 @@ buildvariants:
   - rhel62-small
   batchtime: 1440 # 1 day
   expansions:
-    compile_flags: -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars --enable-free-mon=off --enable-http-client=off
+    compile_flags: -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars --enable-free-mon=off --enable-http-client=off
     test_flags: >-
       --excludeWithAnyTags=requires_http_client
       --repeatSuites=10
@@ -7677,7 +7677,7 @@ buildvariants:
     push_name: linux-debug
     push_arch: x86_64
     resmoke_jobs_factor: 0.5  # Avoid starting too many mongod's
-    compile_flags: --dbg=on --opt=on -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars --enable-free-mon=off --enable-http-client=off
+    compile_flags: --dbg=on --opt=on -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars --enable-free-mon=off --enable-http-client=off
     scons_cache_scope: shared
     test_flags: --excludeWithAnyTags=requires_http_client
     tooltags: ""
@@ -7803,7 +7803,7 @@ buildvariants:
   expansions:
     use_wt_develop: true
     resmoke_jobs_factor: 0.5  # Avoid starting too many mongod's
-    compile_flags: --dbg=on --opt=on -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars --enable-free-mon=off --enable-http-client=off
+    compile_flags: --dbg=on --opt=on -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars --enable-free-mon=off --enable-http-client=off
     use_scons_cache: true
     build_mongoreplay: true
     test_flags: --excludeWithAnyTags=requires_http_client
@@ -7818,7 +7818,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux-duroff
     push_arch: x86_64
-    compile_flags: -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars --enable-free-mon=off --enable-http-client=off
+    compile_flags: -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars --enable-free-mon=off --enable-http-client=off
     # Running WiredTiger with --nojournal in a replica set is no longer supported, so this variant
     # does not include replica set tests. Since transactions are only supported on replica sets, we
     # exclude those tests as well.
@@ -7870,7 +7870,7 @@ buildvariants:
   - rhel62-small
   batchtime: 1440 # 1 day
   expansions:
-    compile_flags: -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     test_flags: --wiredTigerEngineConfig=mmap=false --wiredTigerCollectionConfig=type=lsm --wiredTigerIndexConfig=type=lsm --excludeWithAnyTags=uses_transactions,does_not_support_wiredtiger_lsm
     scons_cache_scope: shared
     tooltags: ""
@@ -7894,7 +7894,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-ubuntu1404
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1404 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1404 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: ubuntu1404
     multiversion_edition: targeted
     has_packages: true
@@ -8003,7 +8003,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-ubuntu1804
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: ubuntu1804
     multiversion_edition: targeted
     has_packages: true
@@ -8106,7 +8106,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-ubuntu1804
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: ubuntu1804
     multiversion_edition: enterprise
     has_packages: true
@@ -8252,7 +8252,7 @@ buildvariants:
     push_name: linux
     push_arch: x86_64-ubuntu1604
     lang_environment: LANG=C
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: ubuntu1604
     multiversion_edition: targeted
     has_packages: true
@@ -8372,7 +8372,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: arm64-enterprise-ubuntu1604
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(grep -c ^processor /proc/cpuinfo) CCFLAGS="-march=armv8-a+crc -mtune=generic" --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(grep -c ^processor /proc/cpuinfo) CCFLAGS="-march=armv8-a+crc -mtune=generic" --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 8 # Avoid starting too many mongod's on ARM test servers
     has_packages: true
     packager_script: packager_enterprise.py
@@ -8468,7 +8468,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: arm64-ubuntu1604
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(grep -c ^processor /proc/cpuinfo) --release CCFLAGS="-march=armv8-a+crc -mtune=generic" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(grep -c ^processor /proc/cpuinfo) --release CCFLAGS="-march=armv8-a+crc -mtune=generic" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 8 # Avoid starting too many mongod's on ARM test servers
     has_packages: true
     packager_script: packager.py
@@ -8507,7 +8507,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: arm64-enterprise-ubuntu1804
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 -j$(grep -c ^processor /proc/cpuinfo) CCFLAGS="-march=armv8-a+crc -mtune=generic" --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 -j$(grep -c ^processor /proc/cpuinfo) CCFLAGS="-march=armv8-a+crc -mtune=generic" --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 8 # Avoid starting too many mongod's on ARM test servers
     has_packages: true
     packager_script: packager_enterprise.py
@@ -8602,7 +8602,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: arm64-ubuntu1804
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 -j$(grep -c ^processor /proc/cpuinfo) --release CCFLAGS="-march=armv8-a+crc -mtune=generic" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 -j$(grep -c ^processor /proc/cpuinfo) --release CCFLAGS="-march=armv8-a+crc -mtune=generic" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 8 # Avoid starting too many mongod's on ARM test servers
     has_packages: true
     packager_script: packager.py
@@ -8641,7 +8641,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: ppc64le-enterprise-ubuntu1604
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(echo "$(grep -c processor /proc/cpuinfo)/2" | bc) --release CCFLAGS="-mcpu=power8 -mtune=power8 -mcmodel=medium" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(echo "$(grep -c processor /proc/cpuinfo)/2" | bc) --release CCFLAGS="-mcpu=power8 -mtune=power8 -mcmodel=medium" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 2
     has_packages: true
     packager_script: packager_enterprise.py
@@ -8742,7 +8742,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: s390x-enterprise-ubuntu1604
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 2
     has_packages: true
     packager_script: packager_enterprise.py
@@ -8862,7 +8862,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: s390x-ubuntu1804
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 --release --jlink=3 -j$(grep -c ^processor /proc/cpuinfo) CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 --release --jlink=3 -j$(grep -c ^processor /proc/cpuinfo) CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: ubuntu1804
     multiversion_edition: targeted
     multiversion_architecture: s390x
@@ -8904,7 +8904,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: s390x-enterprise-ubuntu1804
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 --release --jlink=3 -j$(grep -c ^processor /proc/cpuinfo) CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1804 --release --jlink=3 -j$(grep -c ^processor /proc/cpuinfo) CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 2
     has_packages: true
     packager_script: packager_enterprise.py
@@ -9021,7 +9021,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-amzn64
-    compile_flags: --ssl MONGO_DISTMOD=amzn64 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=amzn64 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager_enterprise.py
     packager_arch: x86_64
@@ -9030,7 +9030,7 @@ buildvariants:
     scons_cache_scope: shared
     tooltags: "ssl sasl"
     build_mongoreplay: true
-    virtualenv: /opt/mongodbtoolchain/v2/bin/virtualenv
+    virtualenv: /opt/mongodbtoolchain/v3/bin/virtualenv
   display_tasks:
   - *dbtest
   - *unittests
@@ -9104,7 +9104,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-amazon
-    compile_flags: --ssl MONGO_DISTMOD=amazon -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=amazon -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: amazon
     multiversion_edition: targeted
     has_packages: true
@@ -9115,7 +9115,7 @@ buildvariants:
     scons_cache_scope: shared
     tooltags: "ssl"
     build_mongoreplay: true
-    virtualenv: /opt/mongodbtoolchain/v2/bin/virtualenv
+    virtualenv: /opt/mongodbtoolchain/v3/bin/virtualenv
   display_tasks:
   - *dbtest
   - *unittests
@@ -9215,7 +9215,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-amazon2
-    compile_flags: --ssl MONGO_DISTMOD=amazon2 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=amazon2 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     # We invoke SCons using --jobs = (# of CPUs / 4) to avoid causing out of memory errors due to
     # spawning a large number of linker processes.
     num_scons_link_jobs_available: $(( $(grep -c ^processor /proc/cpuinfo) / 4 ))
@@ -9301,7 +9301,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-amazon2
-    compile_flags: --ssl MONGO_DISTMOD=amazon2 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=amazon2 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     # We invoke SCons using --jobs = (# of CPUs / 4) to avoid causing out of memory errors due to
     # spawning a large number of linker processes.
     num_scons_link_jobs_available: $(( $(grep -c ^processor /proc/cpuinfo) / 4 ))
@@ -9984,7 +9984,7 @@ buildvariants:
 - name: osx-1010
   display_name: macOS 10.10
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     test_flags: --excludeWithAnyTags=requires_ssl_mongo_tools
@@ -9992,8 +9992,8 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: macos
     push_arch: x86_64
-    compile_env: DEVELOPER_DIR=/Applications/Xcode8.3.app
-    compile_flags: --ssl -j$(sysctl -n hw.logicalcpu) --release --libc++ CCFLAGS="-mmacosx-version-min=10.11" LINKFLAGS="-mmacosx-version-min=10.11"
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
+    compile_flags: --ssl -j$(sysctl -n hw.logicalcpu) --release --libc++ --variables-files=etc/scons/xcode_macosx.vars
     resmoke_jobs_max: 1
     tooltags: "ssl"
     build_mongoreplay: true
@@ -10106,11 +10106,11 @@ buildvariants:
 - name: osx-1010-debug
   display_name: "* macOS 10.10 DEBUG"
   run_on:
-  - macos-1012
+  - macos-1014
   expansions:
     resmoke_jobs_max: 1
-    compile_env: DEVELOPER_DIR=/Applications/Xcode8.3.app
-    compile_flags: --ssl --dbg=on --opt=on -j$(sysctl -n hw.logicalcpu) --libc++ CCFLAGS="-mmacosx-version-min=10.11" LINKFLAGS="-mmacosx-version-min=10.11"
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
+    compile_flags: --ssl --dbg=on --opt=on -j$(sysctl -n hw.logicalcpu) --libc++ --variables-files=etc/scons/xcode_macosx.vars
     tooltags: ""
     build_mongoreplay: true
   display_tasks:
@@ -10140,7 +10140,7 @@ buildvariants:
   modules:
   - enterprise
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     test_flags: --excludeWithAnyTags=requires_ssl_mongo_tools
@@ -10148,8 +10148,8 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: macos
     push_arch: x86_64-enterprise
-    compile_env: DEVELOPER_DIR=/Applications/Xcode8.3.app
-    compile_flags: --ssl -j$(sysctl -n hw.logicalcpu) --release --libc++ CCFLAGS="-mmacosx-version-min=10.11" LINKFLAGS="-mmacosx-version-min=10.11"
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
+    compile_flags: --ssl -j$(sysctl -n hw.logicalcpu) --release --libc++ --variables-files=etc/scons/xcode_macosx.vars
     resmoke_jobs_max: 1
     tooltags: "ssl sasl"
     build_mongoreplay: true
@@ -10183,53 +10183,8 @@ buildvariants:
     distros:
     - rhel70-small
 
-- name: enterprise-osx-1011-xcode-10
-  display_name: ~ Enterprise macOS 10.11 (XCode 10)
-  modules:
-  - enterprise
-  run_on:
-  - macos-1014
-  batchtime: 1440 # 1 day
-  expansions:
-    test_flags: --excludeWithAnyTags=requires_ssl_mongo_tools
-    compile_env: DEVELOPER_DIR=/Applications/Xcode10.0.app
-    compile_flags: >-
-      --ssl
-      -j$(sysctl -n hw.logicalcpu)
-      --libc++
-      --variables-files=etc/scons/xcode_macosx.vars
-    resmoke_jobs_max: 1
-    tooltags: "ssl sasl"
-    build_mongoreplay: true
-  display_tasks:
-  - *dbtest
-  - *unittests
-  tasks:
-  - name: compile_all_run_unittests_TG
-  - name: audit
-  - name: auth_audit
-  - name: ese
-  - name: jsCore
-  - name: jsCore_auth
-  - name: jsCore_txns
-  - name: causally_consistent_jscore_txns_passthrough
-  - name: jstestfuzz_gen
-  - name: jstestfuzz_concurrent_gen
-  - name: jstestfuzz_concurrent_replication_gen
-  - name: jstestfuzz_concurrent_sharded_gen
-  - name: jstestfuzz_replication_gen
-  - name: jstestfuzz_sharded_gen
-  - name: logical_session_cache_replication_1sec_refresh_jscore_passthrough
-  - name: logical_session_cache_sharding_1sec_refresh_jscore_passthrough
-  - name: logical_session_cache_standalone_1sec_refresh_jscore_passthrough
-  - name: replica_sets_auth
-  - name: replica_sets_jscore_passthrough
-  - name: sasl
-  - name: ssl
-  - name: sslSpecial
-
 - name: enterprise-osx-1011-xcode-10-cxx17
-  display_name: ~ Enterprise macOS 10.11 (XCode 10 C++17)
+  display_name: ~ Enterprise macOS 10.11 (XCode 10.1 C++17)
   modules:
   - enterprise
   run_on:
@@ -10237,7 +10192,7 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions:
     test_flags: --excludeWithAnyTags=requires_ssl_mongo_tools
-    compile_env: DEVELOPER_DIR=/Applications/Xcode10.0.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       --ssl
       -j$(sysctl -n hw.logicalcpu)
@@ -10282,7 +10237,7 @@ buildvariants:
   modules:
   - enterprise
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     test_flags: --excludeWithAnyTags=requires_ssl_mongo_tools
@@ -10291,8 +10246,8 @@ buildvariants:
     push_name: osx
     push_arch: x86_64-enterprise
     tooltags: "ssl sasl"
-    compile_env: DEVELOPER_DIR=/Applications/Xcode8.3.app
-    compile_flags: --ssl --ssl-provider=openssl -j$(sysctl -n hw.logicalcpu) --release --libc++ CCFLAGS="-mmacosx-version-min=10.11" LINKFLAGS="-mmacosx-version-min=10.11" LIBPATH="$PWD/openssl_install_dir/lib" CPPPATH="$PWD/openssl_install_dir/include"
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
+    compile_flags: --ssl --ssl-provider=openssl -j$(sysctl -n hw.logicalcpu) --release --libc++ LIBPATH="$PWD/openssl_install_dir/lib" CPPPATH="$PWD/openssl_install_dir/include" --variables-files=etc/scons/xcode_macosx.vars
     resmoke_jobs_max: 1
     build_mongoreplay: true
     build_openssl: true
@@ -10326,21 +10281,21 @@ buildvariants:
 #          Mobile SDK buildvariants       #
 ###########################################
 
-- name: embedded-sdk-macosx-10.10
-  display_name: "Embedded SDK - macOS 10.10"
+- name: embedded-sdk-macosx-10.11
+  display_name: "Embedded SDK - macOS 10.11"
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     test_flags: --excludeWithAnyTags=uses_transactions
     cmake_path: /Applications/cmake-3.11.0-Darwin-x86_64/CMake.app/Contents/bin/cmake
-    compile_env: DEVELOPER_DIR=/Applications/Xcode9.2.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       -j$(sysctl -n hw.logicalcpu)
       --variables-files=etc/scons/xcode_macosx.vars
       FRAMEWORKPATH='$BUILD_ROOT/mongo-embedded-sdk-$MONGO_VERSION/Frameworks'
       --lto
-    cdriver_cmake_osx_deployment_target: "10.10"
+    cdriver_cmake_osx_deployment_target: "10.11"
     cdriver_cmake_flags: >-
         -DCMAKE_BUILD_TYPE=RelWithDebInfo
         -DCMAKE_OSX_SYSROOT="$(xcrun --sdk macosx --show-sdk-path)"
@@ -10359,12 +10314,12 @@ buildvariants:
 - name: embedded-sdk-iphoneos-11.0
   display_name: "Embedded SDK - iOS 11.0"
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     test_flags: --excludeWithAnyTags=uses_transactions
     cmake_path: /Applications/cmake-3.11.0-Darwin-x86_64/CMake.app/Contents/bin/cmake
-    compile_env: DEVELOPER_DIR=/Applications/Xcode9.2.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       -j$(sysctl -n hw.logicalcpu)
       --variables-files=etc/scons/xcode_ios.vars
@@ -10391,12 +10346,12 @@ buildvariants:
 - name: embedded-sdk-iphonesimulator-11.0
   display_name: "Embedded SDK - iOS Simulator 11.0"
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     test_flags: --excludeWithAnyTags=uses_transactions
     cmake_path: /Applications/cmake-3.11.0-Darwin-x86_64/CMake.app/Contents/bin/cmake
-    compile_env: DEVELOPER_DIR=/Applications/Xcode9.2.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       -j$(sysctl -n hw.logicalcpu)
       --variables-files=etc/scons/xcode_ios_sim.vars
@@ -10426,12 +10381,12 @@ buildvariants:
 - name: embedded-sdk-appletvos-10.2
   display_name: "Embedded SDK - tvOS 10.2"
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     cmake_path: /Applications/cmake-3.11.0-Darwin-x86_64/CMake.app/Contents/bin/cmake
     test_flags: --excludeWithAnyTags=uses_transactions
-    compile_env: DEVELOPER_DIR=/Applications/XCode9.2.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       -j$(sysctl -n hw.logicalcpu)
       --variables-files=etc/scons/xcode_tvos.vars
@@ -10458,12 +10413,12 @@ buildvariants:
 - name: embedded-sdk-appletvsimulator-10.2
   display_name: "Embedded SDK - tvOS Simulator 10.2"
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     cmake_path: /Applications/cmake-3.11.0-Darwin-x86_64/CMake.app/Contents/bin/cmake
     test_flags: --excludeWithAnyTags=uses_transactions
-    compile_env: DEVELOPER_DIR=/Applications/XCode9.2.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       -j$(sysctl -n hw.logicalcpu)
       --variables-files=etc/scons/xcode_tvos_sim.vars
@@ -10493,12 +10448,12 @@ buildvariants:
 - name: embedded-sdk-watchos-4.2
   display_name: "Embedded SDK - watchOS 4.2"
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     cmake_path: /Applications/cmake-3.11.0-Darwin-x86_64/CMake.app/Contents/bin/cmake
     test_flags: --excludeWithAnyTags=requires_mmapv1,uses_transactions,requires_http_client
-    compile_env: DEVELOPER_DIR=/Applications/XCode9.2.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       -j$(sysctl -n hw.logicalcpu)
       --variables-files=etc/scons/xcode_watchos.vars
@@ -10525,12 +10480,12 @@ buildvariants:
 - name: embedded-sdk-watchsimulator-4.2
   display_name: "Embedded SDK - watchOS Simulator 4.2"
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     cmake_path: /Applications/cmake-3.11.0-Darwin-x86_64/CMake.app/Contents/bin/cmake
     test_flags: --excludeWithAnyTags=requires_mmapv1,uses_transactions,requires_http_client
-    compile_env: DEVELOPER_DIR=/Applications/XCode9.2.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       -j$(sysctl -n hw.logicalcpu)
       --variables-files=etc/scons/xcode_watchos_sim.vars
@@ -10563,7 +10518,7 @@ buildvariants:
   - macos-1012
   batchtime: 1440 # 1 day
   expansions:
-    compile_env: DEVELOPER_DIR=/Applications/XCode9.2.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
   tasks:
   - name: embedded_sdk_multiarch_apple_package
 
@@ -10577,12 +10532,12 @@ buildvariants:
     # We need --allocator=system here to work around SERVER-XXXXX
     compile_flags: >-
       -j$(grep -c ^processor /proc/cpuinfo)
-      --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+      --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
       LIBPATH="\$BUILD_ROOT/mongo-embedded-sdk-\$MONGO_VERSION/lib"
     cdriver_cmake_flags: >-
         -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        -DCMAKE_C_COMPILER=/opt/mongodbtoolchain/v2/bin/gcc
-        -DCMAKE_CXX_COMPILER=/opt/mongodbtoolchain/v2/bin/g++
+        -DCMAKE_C_COMPILER=/opt/mongodbtoolchain/v3/bin/gcc
+        -DCMAKE_CXX_COMPILER=/opt/mongodbtoolchain/v3/bin/g++
         -DCMAKE_C_FLAGS="-flto"
         -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib
     disable_unit_tests: true
@@ -10764,7 +10719,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-rhel62
-    compile_flags: --ssl MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: rhel62
     multiversion_edition: enterprise
     has_packages: true
@@ -11013,7 +10968,7 @@ buildvariants:
       -j$(grep -c ^processor /proc/cpuinfo)
       --ssl
       --release
-      --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+      --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
       MONGO_DISTMOD=rhel62
     multiversion_platform: rhel62
     multiversion_edition: enterprise
@@ -11217,7 +11172,7 @@ buildvariants:
   batchtime: 10080 # 7 days
   stepback: false
   expansions:
-    compile_flags: --dbg=on --gcov --ssl MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --dbg=on --gcov --ssl MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: rhel62
     multiversion_edition: enterprise
     resmoke_jobs_factor: 0.5  # Avoid starting too many mongod's
@@ -11369,7 +11324,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-rhel70
-    compile_flags: --ssl MONGO_DISTMOD=rhel70 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=rhel70 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager_enterprise.py
     packager_arch: x86_64
@@ -11434,7 +11389,7 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions:
     <<: *enterprise-rhel-70-64-bit-expansions-template
-    compile_flags: --ssl --use-cpu-profiler MONGO_DISTMOD=rhel70 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl --use-cpu-profiler MONGO_DISTMOD=rhel70 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     additional_targets: dagger # If this moves to another variant, update the compile_all task
   tasks:
   - name: compile_all_run_unittests_TG
@@ -11451,7 +11406,7 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions:
     <<: *enterprise-rhel-70-64-bit-expansions-template
-    compile_flags: --ssl --use-cpu-profiler MONGO_DISTMOD=rhel70 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars --enterprise-features=hot_backups
+    compile_flags: --ssl --use-cpu-profiler MONGO_DISTMOD=rhel70 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars --enterprise-features=hot_backups
     has_packages: false
   tasks:
   - name: compile_all_run_unittests_TG
@@ -11470,7 +11425,7 @@ buildvariants:
   - ubuntu1604-test
   expansions:
     resmoke_jobs_factor: 0.5  # Avoid starting too many mongod's
-    compile_flags: MONGO_DISTMOD=ubuntu1604 --dbg=on --opt=on -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: MONGO_DISTMOD=ubuntu1604 --dbg=on --opt=on -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     scons_cache_scope: shared
     tooltags: ""
     build_mongoreplay: true
@@ -11498,7 +11453,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-rhel62
-    compile_flags: --ssl MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: rhel62
     multiversion_edition: targeted
     has_packages: true
@@ -11611,7 +11566,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-rhel70
-    compile_flags: --ssl MONGO_DISTMOD=rhel70 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=rhel70 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: rhel70
     multiversion_edition: targeted
     has_packages: true
@@ -11734,7 +11689,7 @@ buildvariants:
   stepback: false
   expansions:
     # We need to compensate for SMT8 setting the cpu count very high and lower the amount of parallelism down
-    compile_flags: --ssl MONGO_DISTMOD=rhel71 --release -j$(echo "$(grep -c processor /proc/cpuinfo)/2" | bc) CCFLAGS="-mcpu=power8 -mtune=power8 -mcmodel=medium" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=rhel71 --release -j$(echo "$(grep -c processor /proc/cpuinfo)/2" | bc) CCFLAGS="-mcpu=power8 -mtune=power8 -mcmodel=medium" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_factor: 0.25
     has_packages: true
     packager_script: packager_enterprise.py
@@ -11860,7 +11815,7 @@ buildvariants:
   batchtime: 10080 # 7 days
   stepback: false
   expansions:
-    compile_flags: --ssl MONGO_DISTMOD=rhel72 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=rhel72 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 2
     has_packages: true
     packager_script: packager_enterprise.py
@@ -11984,7 +11939,7 @@ buildvariants:
   batchtime: 1440 # 1 day
   stepback: false
   expansions:
-    compile_flags: --ssl MONGO_DISTMOD=rhel67 --release -j3 CCFLAGS="-march=z9-109 -mtune=z10" --variables-files=etc/scons/mongodbtoolchain_gcc.vars --use-hardware-crc32=off
+    compile_flags: --ssl MONGO_DISTMOD=rhel67 --release -j3 CCFLAGS="-march=z9-109 -mtune=z10" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars --use-hardware-crc32=off
     has_packages: true
     packager_script: packager_enterprise.py
     packager_arch: s390x
@@ -12096,7 +12051,7 @@ buildvariants:
   - rhel72-zseries-test
   batchtime: 1440 # 1 day
   expansions:
-    compile_flags: --ssl MONGO_DISTMOD=rhel72 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=rhel72 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager.py
     packager_arch: s390x
@@ -12131,7 +12086,7 @@ buildvariants:
   - rhel67-zseries-test
   batchtime: 1440 # 1 day
   expansions:
-    compile_flags: --ssl MONGO_DISTMOD=rhel67 --release -j3 CCFLAGS="-march=z9-109 -mtune=z10" --variables-files=etc/scons/mongodbtoolchain_gcc.vars --use-hardware-crc32=off
+    compile_flags: --ssl MONGO_DISTMOD=rhel67 --release -j3 CCFLAGS="-march=z9-109 -mtune=z10" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars --use-hardware-crc32=off
     has_packages: true
     packager_script: packager.py
     packager_arch: s390x
@@ -12176,7 +12131,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-ubuntu1404
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1404 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1404 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager_enterprise.py
     packager_arch: x86_64
@@ -12236,7 +12191,7 @@ buildvariants:
     push_name: linux
     lang_environment: LANG=C
     push_arch: x86_64-enterprise-ubuntu1604
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager_enterprise.py
     packager_arch: x86_64
@@ -12302,15 +12257,16 @@ buildvariants:
   - name: push
 
 
-- name: enterprise-ubuntu-dynamic-1604-clang-3.8-libcxx
-  display_name: "! Shared Library Enterprise Ubuntu 16.04 (Clang 3.8)"
+- name: enterprise-ubuntu-dynamic-1604-clang
+  display_name: "! Shared Library Enterprise Ubuntu 16.04 (Clang)"
   modules:
   - enterprise
   run_on:
    - ubuntu1604-test
   expansions:
     lang_environment: LANG=C
-    compile_flags: --link-model=dynamic --ssl CC=/usr/bin/clang-3.8 CXX=/usr/bin/clang++-3.8 -j$(grep -c ^processor /proc/cpuinfo) CPPPATH=/usr/include/libcxxabi/
+    # We need --allocator=system here solely due to SERVER-27675
+    compile_flags: --link-model=dynamic --allocator=system -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_clang.vars
     scons_cache_scope: shared
     tooltags: "ssl sasl"
     build_mongoreplay: true
@@ -12323,13 +12279,14 @@ buildvariants:
     - ubuntu1604-build
   - name: buildscripts_test
 
-- name: ubuntu-dynamic-1604-clang-3.8-libcxx
-  display_name: "* Shared Library Ubuntu 16.04 (Clang 3.8)"
+- name: ubuntu-dynamic-1604-clang
+  display_name: "* Shared Library Ubuntu 16.04 (Clang)"
   run_on:
    - ubuntu1604-test
   expansions:
     lang_environment: LANG=C
-    compile_flags: --link-model=dynamic --ssl CC=/usr/bin/clang-3.8 CXX=/usr/bin/clang++-3.8 -j$(grep -c ^processor /proc/cpuinfo) CPPPATH=/usr/include/libcxxabi/
+    # We need --allocator=system here solely due to SERVER-27675
+    compile_flags: --link-model=dynamic --allocator=system -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_clang.vars
     scons_cache_scope: shared
     tooltags: ""
     build_mongoreplay: true
@@ -12358,7 +12315,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-suse12
-    compile_flags: --ssl MONGO_DISTMOD=suse12 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=suse12 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager_enterprise.py
     packager_arch: x86_64
@@ -12420,7 +12377,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: s390x-enterprise-suse12
-    compile_flags: --ssl MONGO_DISTMOD=suse12 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=suse12 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager_enterprise.py
     packager_arch: s390x
@@ -12541,7 +12498,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: s390x-suse12
-    compile_flags: --ssl MONGO_DISTMOD=suse12 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=suse12 --release -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager.py
     packager_arch: s390x
@@ -12580,7 +12537,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-suse12
-    compile_flags: --ssl MONGO_DISTMOD=suse12 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=suse12 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: suse12
     multiversion_edition: targeted
     has_packages: true
@@ -12688,7 +12645,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-debian81
-    compile_flags: --ssl MONGO_DISTMOD=debian81 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=debian81 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     has_packages: true
     packager_script: packager_enterprise.py
     packager_arch: x86_64
@@ -12746,7 +12703,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-debian81
-    compile_flags: --ssl MONGO_DISTMOD=debian81 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=debian81 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: debian81
     multiversion_edition: targeted
     has_packages: true
@@ -12849,7 +12806,7 @@ buildvariants:
     push_bucket: downloads.10gen.com
     push_name: linux
     push_arch: x86_64-enterprise-debian92
-    compile_flags: --ssl MONGO_DISTMOD=debian92 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=debian92 --release -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     # We invoke SCons using --jobs = (# of CPUs / 4) to avoid causing out of memory errors due to
     # spawning a large number of linker processes.
     num_scons_link_jobs_available: $(( $(grep -c ^processor /proc/cpuinfo) / 4 ))
@@ -12910,7 +12867,7 @@ buildvariants:
     push_bucket: downloads.mongodb.org
     push_name: linux
     push_arch: x86_64-debian92
-    compile_flags: --ssl MONGO_DISTMOD=debian92 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=debian92 -j$(grep -c ^processor /proc/cpuinfo) --release --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     # We invoke SCons using --jobs = (# of CPUs / 4) to avoid causing out of memory errors due to
     # spawning a large number of linker processes.
     num_scons_link_jobs_available: $(( $(grep -c ^processor /proc/cpuinfo) / 4 ))
@@ -13019,7 +12976,7 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions:
     test_flags: --storageEngine=biggie --excludeWithAnyTags=SERVER-38379,requires_persistence,requires_journaling,uses_transactions,requires_wiredtiger
-    compile_flags: MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --dbg=off --opt=on --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --dbg=off --opt=on --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     num_jobs_available: $(grep -c ^processor /proc/cpuinfo)
     scons_cache_scope: shared
     tooltags: ""
@@ -13042,7 +12999,7 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions: &enterprise-rhel-62-64-bit-inmem-expansions
     test_flags: --storageEngine=inMemory --excludeWithAnyTags=requires_persistence,requires_journaling,uses_transactions
-    compile_flags: --ssl MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --ssl MONGO_DISTMOD=rhel62 -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     multiversion_platform: rhel62
     multiversion_edition: enterprise
     scons_cache_scope: shared
@@ -13249,7 +13206,7 @@ buildvariants:
       -j$(grep -c ^processor /proc/cpuinfo)
       --mobile-se=on
       --ssl=off
-      --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+      --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
       MONGO_DISTMOD=rhel62
     scons_cache_scope: shared
     build_mongoreplay: true
@@ -13328,7 +13285,7 @@ buildvariants:
         --mobile-se=on
         --ssl=off
         --release
-        --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+        --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
         CCFLAGS="-march=armv8-a+crc -mtune=generic"
         MONGO_DISTMOD=ubuntu1604
     resmoke_jobs_max: 8 # Avoid starting too many mongod's on ARM test servers
@@ -13384,10 +13341,10 @@ buildvariants:
   - name: burn_in_tests
   - name: jsCore_mobile
 
-- name: osx-1010-mobile
-  display_name: macOS 10.10 (mobile)
+- name: osx-1011-mobile
+  display_name: macOS 10.11 (mobile)
   run_on:
-  - macos-1012
+  - macos-1014
   batchtime: 1440 # 1 day
   expansions:
     push_path: osx
@@ -13400,16 +13357,15 @@ buildvariants:
       --storageEngine=mobile
       --excludeWithAnyTags=requires_wiredtiger,requires_replication,requires_sharding,uses_transactions,requires_capped,requires_profiling,requires_compact,requires_document_locking
       --excludeWithAnyTags=SERVER-32709,SERVER-32869
-    compile_env: DEVELOPER_DIR=/Applications/Xcode8.3.app
+    compile_env: DEVELOPER_DIR=/Applications/Xcode10.1.app
     compile_flags: >-
       -j$(sysctl -n hw.logicalcpu)
       --libc++
       --mobile-se=on
       --ssl=off
       --release
-      CCFLAGS="-mmacosx-version-min=10.10"
-      CPPPATH=/opt/mongodbtoolchain/v2/include
-      LINKFLAGS="-mmacosx-version-min=10.10"
+      CPPPATH=/opt/mongodbtoolchain/v3/include
+      --variables-files=etc/scons/xcode_macosx.vars
     resmoke_jobs_max: 1
     build_mongoreplay: true
     additional_targets: mongoebench mongoed
@@ -13451,7 +13407,7 @@ buildvariants:
     # Transactions are not explicitly supported on the ephemeralForTest storage engine.
     # Speculative majority reads are currently only allowed for change streams, which are only supported on WiredTiger.
     test_flags: --storageEngine=ephemeralForTest --excludeWithAnyTags=requires_persistence,requires_fsync,SERVER-21420,SERVER-21658,requires_journaling,requires_wiredtiger,uses_transactions,requires_document_locking,uses_speculative_majority
-    compile_flags: -j$(grep -c ^processor /proc/cpuinfo) --dbg=off --opt=on --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: -j$(grep -c ^processor /proc/cpuinfo) --dbg=off --opt=on --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     scons_cache_scope: shared
     tooltags: ""
     build_mongoreplay: true
@@ -13544,7 +13500,7 @@ buildvariants:
   stepback: false
   expansions:
     # We need to compensate for SMT8 setting the cpu count very high and lower the amount of parallelism down
-    compile_flags: --dbg=on --opt=on --ssl MONGO_DISTMOD=rhel71 -j$(echo "$(grep -c processor /proc/cpuinfo)/2" | bc) CCFLAGS="-mcpu=power8 -mtune=power8 -mcmodel=medium" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --dbg=on --opt=on --ssl MONGO_DISTMOD=rhel71 -j$(echo "$(grep -c processor /proc/cpuinfo)/2" | bc) CCFLAGS="-mcpu=power8 -mtune=power8 -mcmodel=medium" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_factor: 0.25
     test_flags: --storageEngine=inMemory --excludeWithAnyTags=requires_persistence,requires_journaling,uses_transactions
     tooltags: "ssl sasl"
@@ -13632,7 +13588,7 @@ buildvariants:
   batchtime: 10080 # 7 days
   stepback: false
   expansions:
-    compile_flags: --dbg=on --opt=on --ssl MONGO_DISTMOD=rhel72 -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_gcc.vars
+    compile_flags: --dbg=on --opt=on --ssl MONGO_DISTMOD=rhel72 -j3 CCFLAGS="-march=z196 -mtune=zEC12" --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
     resmoke_jobs_max: 2
     test_flags: --storageEngine=inMemory --excludeWithAnyTags=requires_persistence,requires_journaling,uses_transactions
     tooltags: "ssl sasl"
@@ -13743,10 +13699,10 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions:
     # We need llvm-symbolizer in the PATH for ASAN for clang-3.7 or later.
-    variant_path_suffix: /opt/mongodbtoolchain/v2/bin
+    variant_path_suffix: /opt/mongodbtoolchain/v3/bin
     lang_environment: LANG=C
     san_options: LSAN_OPTIONS="suppressions=etc/lsan.suppressions:report_objects=1" ASAN_OPTIONS=detect_leaks=1:check_initialization_order=true:strict_init_order=true:abort_on_error=1:disable_coredump=0:handle_abort=0:handle_segv=0:handle_sigbus=0:handle_sigill=0:handle_sigfpe=0
-    compile_flags: --variables-files=etc/scons/mongodbtoolchain_clang.vars --dbg=on --opt=on --allocator=system --sanitize=address --ssl --enable-free-mon=on -j$(grep -c ^processor /proc/cpuinfo) --nostrip
+    compile_flags: --variables-files=etc/scons/mongodbtoolchain_v3_clang.vars --dbg=on --opt=on --allocator=system --sanitize=address --ssl --enable-free-mon=on -j$(grep -c ^processor /proc/cpuinfo) --nostrip
     multiversion_platform: ubuntu1604
     multiversion_edition: enterprise
     resmoke_jobs_factor: 0.3  # Avoid starting too many mongod's under ASAN build.
@@ -13905,10 +13861,10 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions:
     # We need llvm-symbolizer in the PATH for ASAN for clang-3.7 or later.
-    variant_path_suffix: /opt/mongodbtoolchain/v2/bin
+    variant_path_suffix: /opt/mongodbtoolchain/v3/bin
     lang_environment: LANG=C
     san_options: LSAN_OPTIONS="suppressions=etc/lsan.suppressions:report_objects=1" ASAN_OPTIONS=detect_leaks=1:check_initialization_order=true:strict_init_order=true:abort_on_error=1:disable_coredump=0:handle_abort=0:handle_segv=0:handle_sigbus=0:handle_sigill=0:handle_sigfpe=0
-    compile_flags: --variables-files=etc/scons/mongodbtoolchain_clang.vars --opt=on --allocator=system --sanitize=address --ssl -j$(grep -c ^processor /proc/cpuinfo) --nostrip
+    compile_flags: --variables-files=etc/scons/mongodbtoolchain_v3_clang.vars --opt=on --allocator=system --sanitize=address --ssl -j$(grep -c ^processor /proc/cpuinfo) --nostrip
     resmoke_jobs_factor: 0.3  # Avoid starting too many mongod's under ASAN build.
     tooltags: "ssl"
     build_mongoreplay: true
@@ -13950,10 +13906,10 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions:
     # We need llvm-symbolizer in the PATH for UBSAN.
-    variant_path_suffix: /opt/mongodbtoolchain/v2/bin
+    variant_path_suffix: /opt/mongodbtoolchain/v3/bin
     lang_environment: LANG=C
     san_options: UBSAN_OPTIONS="print_stacktrace=1:handle_abort=0:handle_segv=0:handle_sigbus=0:handle_sigill=0:handle_sigfpe=0"
-    compile_flags: --variables-files=etc/scons/mongodbtoolchain_clang.vars --dbg=on --opt=on --allocator=system --sanitize=undefined --ssl --enable-free-mon=on -j$(grep -c ^processor /proc/cpuinfo) --nostrip
+    compile_flags: --variables-files=etc/scons/mongodbtoolchain_v3_clang.vars --dbg=on --opt=on --allocator=system --sanitize=undefined --ssl --enable-free-mon=on -j$(grep -c ^processor /proc/cpuinfo) --nostrip
     multiversion_platform: ubuntu1604
     multiversion_edition: enterprise
     resmoke_jobs_factor: 0.3  # Avoid starting too many mongod's under UBSAN build.
@@ -14101,10 +14057,10 @@ buildvariants:
   stepback: true
   expansions:
     # We need llvm-symbolizer in the PATH for ASAN for clang-3.7 or later.
-    variant_path_suffix: /opt/mongodbtoolchain/v2/bin
+    variant_path_suffix: /opt/mongodbtoolchain/v3/bin
     lang_environment: LANG=C
     san_options: UBSAN_OPTIONS="print_stacktrace=1:handle_abort=0:handle_segv=0:handle_sigbus=0:handle_sigill=0:handle_sigfpe=0" LSAN_OPTIONS="suppressions=etc/lsan.suppressions:report_objects=1" ASAN_OPTIONS=detect_leaks=1:check_initialization_order=true:strict_init_order=true:abort_on_error=1:disable_coredump=0:handle_abort=0:handle_segv=0:handle_sigbus=0:handle_sigill=0:handle_sigfpe=0
-    compile_flags: --variables-files=etc/scons/mongodbtoolchain_clang.vars --dbg=on --opt=on --allocator=system --sanitize=undefined,address --ssl -j$(grep -c ^processor /proc/cpuinfo) --nostrip
+    compile_flags: --variables-files=etc/scons/mongodbtoolchain_v3_clang.vars --dbg=on --opt=on --allocator=system --sanitize=undefined,address --ssl -j$(grep -c ^processor /proc/cpuinfo) --nostrip
     resmoke_jobs_factor: 0.3  # Avoid starting too many mongod's under {A,UB}SAN build.
     tooltags: "ssl"
     build_mongoreplay: true
@@ -14133,10 +14089,10 @@ buildvariants:
   batchtime: 1440 # 1 day
   expansions:
     # We need llvm-symbolizer in the PATH for ASAN for clang-3.7 or later.
-    variant_path_suffix: /opt/mongodbtoolchain/v2/bin
+    variant_path_suffix: /opt/mongodbtoolchain/v3/bin
     lang_environment: LANG=C
     san_options: UBSAN_OPTIONS="print_stacktrace=1:handle_abort=0:handle_segv=0:handle_sigbus=0:handle_sigill=0:handle_sigfpe=0" LSAN_OPTIONS="suppressions=etc/lsan.suppressions:report_objects=1" ASAN_OPTIONS=detect_leaks=1:check_initialization_order=true:strict_init_order=true:abort_on_error=1:disable_coredump=0:handle_abort=0:handle_segv=0:handle_sigbus=0:handle_sigill=0:handle_sigfpe=0
-    compile_flags: --variables-files=etc/scons/mongodbtoolchain_clang.vars --dbg=on --opt=on --allocator=system --sanitize=undefined,address --ssl -j$(grep -c ^processor /proc/cpuinfo) --nostrip
+    compile_flags: --variables-files=etc/scons/mongodbtoolchain_v3_clang.vars --dbg=on --opt=on --allocator=system --sanitize=undefined,address --ssl -j$(grep -c ^processor /proc/cpuinfo) --nostrip
     resmoke_jobs_factor: 0.3  # Avoid starting too many mongod's under {A,UB}SAN build.
     tooltags: "ssl"
     build_mongoreplay: false
@@ -14246,7 +14202,8 @@ buildvariants:
   - enterprise
   expansions:
     lang_environment: LANG=C
-    compile_flags: --ssl MONGO_DISTMOD=ubuntu1604 -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_gcc.vars --link-model=dynamic
+    # We need --allocator=system here solely due to SERVER-27675
+    compile_flags: MONGO_DISTMOD=ubuntu1604 -j$(grep -c ^processor /proc/cpuinfo) --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars --link-model=dynamic --allocator=system
     scons_cache_scope: shared
     scons_cache_mode: all
     tooltags: "ssl sasl"
@@ -14281,81 +14238,6 @@ buildvariants:
   stepback: false
   tasks:
   - name: shared_scons_cache_pruning
-
-- name: enterprise-ubuntu1804-64-v3-toolchain-canary-debug
-  display_name: Enterprise Ubuntu 18.04 (Toolchain V3 GCC Canary Builder) DEBUG
-  modules:
-  - enterprise
-  run_on:
-  - ubuntu1804-test
-  batchtime: 1440 # 1 day
-  expansions:
-    compile_flags: >-
-      --ssl MONGO_DISTMOD=ubuntu1804
-      -j$(grep -c ^processor /proc/cpuinfo)
-      --variables-files=etc/scons/mongodbtoolchain_v3_gcc.vars
-      --dbg=on
-    multiversion_platform: ubuntu1804
-    multiversion_edition: enterprise
-    scons_cache_scope: shared
-    tooltags: "ssl sasl"
-    build_mongoreplay: true
-    has_packages: false
-  display_tasks:
-  - *dbtest
-  - *unittests
-  tasks:
-  - name: compile_all_run_unittests_TG
-    distros:
-    - ubuntu1804-build
-  - name: audit
-  - name: ese
-  - name: jsCore
-  - name: jsCore_auth
-  - name: jsCore_txns
-  - name: causally_consistent_jscore_txns_passthrough
-  - name: sasl
-  - name: snmp
-  - name: ssl
-  - name: sslSpecial
-
-- name: enterprise-ubuntu1804-64-v3-toolchain-canary-clang-debug
-  display_name: Enterprise Ubuntu 18.04 (Toolchain V3 Clang Canary Builder) DEBUG
-  modules:
-  - enterprise
-  run_on:
-  - ubuntu1804-test
-  batchtime: 1440 # 1 day
-  expansions:
-    compile_flags: >-
-      --ssl MONGO_DISTMOD=ubuntu1804
-      --disable-warnings-as-errors
-      -j$(grep -c ^processor /proc/cpuinfo)
-      --variables-files=etc/scons/mongodbtoolchain_v3_clang.vars
-      --dbg=on
-    multiversion_platform: ubuntu1804
-    multiversion_edition: enterprise
-    scons_cache_scope: shared
-    tooltags: "ssl sasl"
-    build_mongoreplay: true
-    has_packages: false
-  display_tasks:
-  - *dbtest
-  - *unittests
-  tasks:
-  - name: compile_all_run_unittests_TG
-    distros:
-    - ubuntu1804-build
-  - name: audit
-  - name: ese
-  - name: jsCore
-  - name: jsCore_auth
-  - name: jsCore_txns
-  - name: causally_consistent_jscore_txns_passthrough
-  - name: sasl
-  - name: snmp
-  - name: ssl
-  - name: sslSpecial
 
 - name: windows-64-vs2017-cxx17
   display_name: "Windows VS2017 Canary C++17 Builder"
