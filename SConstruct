@@ -474,8 +474,8 @@ add_option('cache-dir',
 )
 
 add_option("cxx-std",
-    choices=["14", "17"],
-    default="14",
+    choices=["17"],
+    default="17",
     help="Select the C++ langauge standard to build with",
 )
 
@@ -2362,15 +2362,10 @@ def doConfigure(myenv):
 
     if myenv.ToolchainIs('msvc'):
         myenv.AppendUnique(CXXFLAGS=['/Zc:__cplusplus'])
-        if get_option('cxx-std') == "14":
-            myenv.AppendUnique(CCFLAGS=['/std:c++14'])
-        elif get_option('cxx-std') == "17":
+        if get_option('cxx-std') == "17":
             myenv.AppendUnique(CCFLAGS=['/std:c++17'])
     else:
-        if get_option('cxx-std') == "14":
-            if not AddToCXXFLAGSIfSupported(myenv, '-std=c++14'):
-                myenv.ConfError('Compiler does not honor -std=c++14')
-        elif get_option('cxx-std') == "17":
+        if get_option('cxx-std') == "17":
             if not AddToCXXFLAGSIfSupported(myenv, '-std=c++17'):
                 myenv.ConfError('Compiler does not honor -std=c++17')
 
@@ -2379,21 +2374,6 @@ def doConfigure(myenv):
 
     if using_system_version_of_cxx_libraries():
         print( 'WARNING: System versions of C++ libraries must be compiled with C++14/17 support' )
-
-    def CheckCxx14(context):
-        test_body = """
-        #if __cplusplus < 201402L
-        #error
-        #endif
-        auto DeducedReturnTypesAreACXX14Feature() {
-            return 0;
-        }
-        """
-
-        context.Message('Checking for C++14... ')
-        ret = context.TryCompile(textwrap.dedent(test_body), ".cpp")
-        context.Result(ret)
-        return ret
 
     def CheckCxx17(context):
         test_body = """
@@ -2409,12 +2389,8 @@ def doConfigure(myenv):
         return ret
 
     conf = Configure(myenv, help=False, custom_tests = {
-        'CheckCxx14' : CheckCxx14,
         'CheckCxx17' : CheckCxx17,
     })
-
-    if not conf.CheckCxx14():
-        myenv.ConfError('C++14 support is required to build MongoDB')
 
     if get_option('cxx-std') == "17" and not conf.CheckCxx17():
         myenv.ConfError('C++17 was requested, but the compiler appears not to offer it')
