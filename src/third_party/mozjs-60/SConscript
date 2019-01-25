@@ -173,6 +173,11 @@ if env.TargetOSIs('windows'):
         ("_CRT_RAND_S", "1")
     ])
 
+if env['TARGET_ARCH'] == 'x86_64':
+    env.Prepend(CPPDEFINES=[
+        ("WASM_HUGE_MEMORY", "1")
+    ])
+
 sources.extend(Glob('platform/' + env["TARGET_ARCH"] + "/" + env["TARGET_OS"] + "/build/*.cpp")),
 
 # All of those unified sources come in from configure.  The files don't

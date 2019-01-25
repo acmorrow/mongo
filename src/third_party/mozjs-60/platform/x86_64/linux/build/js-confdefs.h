@@ -62,9 +62,6 @@
 #define HAVE___CXA_DEMANGLE 1
 #define JS_64BIT 1
 #define JS_CODEGEN_X64 1
-//Mongodb// when JS_CODEGEN_X64 is defined WASM_HUGE_MEMORY should be as well
-#define WASM_HUGE_MEMORY 1
-//Mongodb//
 #define JS_DEFAULT_JITREPORT_GRANULARITY 3
 #define JS_POSIX_NSPR 1
 #define JS_PUNBOX64 1
