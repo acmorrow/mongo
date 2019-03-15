@@ -32,6 +32,7 @@
 #include "mongo/platform/basic.h"
 
 #ifdef _WIN32
+#include <appmodel.h>
 #include <crtdbg.h>
 #include <mmsystem.h>
 #include <stdio.h>
@@ -40,6 +41,7 @@
 
 #include "mongo/base/init.h"
 #include "mongo/util/log.h"
+#include "mongo/util/scopeguard.h"
 #include "mongo/util/stacktrace.h"
 
 #ifdef _WIN32
@@ -75,6 +77,40 @@ MONGO_INITIALIZER(Behaviors_Win32)(InitializerContext*) {
             std::min(std::max(int(tc.wPeriodMin), targetResolution), int(tc.wPeriodMax));
         invariant(timeBeginPeriod(timerResolution) == TIMERR_NOERROR);
     }
+
+    // https://jira.mongodb.org/browse/SERVER-39728
+    //
+    // It appears that during process shutdown, the CRT attempts to
+    // call AppPolicyGetProcessTerminationMethod during last
+    // rites. That function in turn wants to load a DLL, and we crash.
+    //
+    // By calling AppPolicyGetProcessTerminationMethod here, we force
+    // whatever support code is needed by that entry point to be
+    // loaded early in the process lifetime so that we don't need to
+    // do that load at shutdown.
+#if 0
+    warning() << "XXX ACM START";
+
+    HANDLE accessToken;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &accessToken)) {
+        const auto str = errnoWithPrefix("Failed to OpenProcessToken");
+        return Status(ErrorCodes::InternalError, str);
+    }
+    const auto accessTokenGuard = makeGuard([&] { CloseHandle(accessToken); });
+
+    AppPolicyProcessTerminationMethod value;
+    const auto result = AppPolicyGetProcessTerminationMethod(accessToken, &value);
+    if (result != ERROR_SUCCESS) {
+        // TODO: Is there something more we can do with the error code?
+        return Status(ErrorCodes::InternalError, "Failed to call AppPolicyGetProcessTerminationMethod");
+    }
+
+    if ((value != AppPolicyProcessTerminationMethod_ExitProcess) && (value != AppPolicyProcessTerminationMethod_TerminateProcess)) {
+        return Status(ErrorCodes::InternalError, "Process has an unknown termination method");
+    }
+
+    warning() << "XXX ACM FINISH";
+#endif
 
     return Status::OK();
 }
