@@ -666,7 +666,7 @@ def installBinary( e, name ):
         debug_sym_name += '.dSYM'
         debug_sym_cmd = 'dsymutil -o ${TARGET} ${SOURCE}'
     elif e.ToolchainIs('msvc'):
-        debug_sym_name += '.pdb'
+        debug_sym_name += '.exe.pdb'
         distBinaries.append(debug_sym_name)
         distDebugSymbols.append(debug_sym_name)
 

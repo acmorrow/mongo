@@ -44,7 +44,7 @@
         </util:User>
       </Component>
       <Component Id="c_mongodPdb" Guid="8B41A2E2-911C-4399-8E9F-D3C1AD3B9EDD">
-        <File Id="f_mongodPdb" Name="mongod.pdb" Source="$(var.BinarySource)\mongod.pdb"
+        <File Id="f_mongodPdb" Name="mongod.exe.pdb" Source="$(var.BinarySource)\mongod.exe.pdb"
               DiskId ="1" KeyPath="yes"/>
       </Component>
       <Component Id="c_mongodCfg" Guid="EA715A4C-7C63-4C5C-8F73-A82E84668AEE">
@@ -76,7 +76,7 @@
               DiskId ="1" KeyPath="yes"/>
       </Component>
       <Component Id="c_mongosPdb" Guid="F1694AB8-4B0D-4096-AD67-948063FF2A6C">
-        <File Id="f_mongosPdb" Name="mongos.pdb" Source="$(var.BinarySource)\mongos.pdb"
+        <File Id="f_mongosPdb" Name="mongos.exe.pdb" Source="$(var.BinarySource)\mongos.exe.pdb"
               DiskId ="1" KeyPath="yes"/>
       </Component>
       <Component Id="c_mongostat" Guid="0A881C85-AB39-4247-BADD-C8191F2FFF0C">
@@ -117,7 +117,7 @@
                 DiskId ="1" KeyPath="yes"/>
         </Component>
         <Component Id="c_mongocryptdPdb" Guid="49950D1E-55B0-4146-AEDE-C60C6B086ABF">
-          <File Id="f_mongocryptdPdb" Name="mongocryptd.pdb" Source="$(var.EnterpriseToolBinarySource)\mongocryptd.pdb"
+          <File Id="f_mongocryptdPdb" Name="mongocryptd.exe.pdb" Source="$(var.EnterpriseToolBinarySource)\mongocryptd.exe.pdb"
                 DiskId ="1" KeyPath="yes"/>
         </Component>
       <?endif ?>

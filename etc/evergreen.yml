@@ -9801,7 +9801,7 @@ buildvariants:
     python: python
     python3: '/cygdrive/c/python/python36/python.exe'
     ext: zip
-    use_scons_cache: true
+    use_scons_cache: false
     tooltags: "ssl"
     build_mongoreplay: false
     large_distro_name: windows-64-vs2017-compile

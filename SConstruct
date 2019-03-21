@@ -548,8 +548,8 @@ add_option('toolchain-root',
 
 add_option('msvc-debugging-format',
     choices=["codeview", "pdb"],
-    default="codeview",
-    help='Debugging format in debug builds using msvc. Codeview (/Z7) or Program database (/Zi). Default is codeview.',
+    default="pdb",
+    help='Debugging format in debug builds using msvc. Codeview (/Z7) or Program database (/Zi). Default is pdb.',
     type='choice',
 )
 
@@ -1289,8 +1289,13 @@ else:
     env['MONGO_ALLOCATOR'] = get_option('allocator')
 
 if has_option("cache"):
+
+    if get_option('msvc-debugging-format') == 'pdb':
+        env.FatalError("Mixing --msvc-debugging-format=pdb and --cache doesn't work correctly yet. See SERVER-33111")
+
     if has_option("gcov"):
         env.FatalError("Mixing --cache and --gcov doesn't work correctly yet. See SERVER-11084")
+
     env.CacheDir(str(env.Dir(cacheDir)))
 
 # Normalize the link model. If it is auto, then for now both developer and release builds
@@ -1709,11 +1714,16 @@ elif env.TargetOSIs('windows'):
     # Don't send error reports in case of internal compiler error
     env.Append( CCFLAGS= ["/errorReport:none"] )
 
+    # When building on visual studio, this sets the name of the debug symbols file
+    env['PDB'] = '${TARGET}.pdb'
+
     # Select debugging format. /Zi gives faster links but seem to use more memory
     if get_option('msvc-debugging-format') == "codeview":
-        env['CCPDBFLAGS'] = "/Z7"
+        env['CCPDBFLAGS'] = ["/Z7"]
     elif get_option('msvc-debugging-format') == "pdb":
-        env['CCPDBFLAGS'] = '/Zi /Fd${TARGET}.pdb'
+        env['CCPDBFLAGS'] = ["/Zi", "/Fd${PDB}"]
+    else:
+        print('WARNING: Unknown MSVC debugging format selected with --msvc-debugging-format')
 
     # /DEBUG will tell the linker to create a .pdb file
     # which WinDbg and Visual Studio will use to resolve
@@ -1794,10 +1804,6 @@ elif env.TargetOSIs('windows'):
             'secur32.lib',
         ],
     )
-
-# When building on visual studio, this sets the name of the debug symbols file
-if env.ToolchainIs('msvc'):
-    env['PDB'] = '${TARGET.base}.pdb'
 
 if env.TargetOSIs('posix'):
 
