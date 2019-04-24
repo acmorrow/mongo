@@ -302,7 +302,7 @@ else:
             """Put task into request queue."""
             self.requestQueue.put(task)
 
-        def get(self):
+        def get():
             """Remove and return a result tuple from the results queue."""
             return self.resultsQueue.get()
 
@@ -373,60 +373,126 @@ else:
             an exception), then the job will stop."""
 
             jobs = 0
-            
+
             while True:
-                # Start up as many available tasks as we're
-                # allowed to.
-                while jobs < self.maxjobs:
-                    task = self.taskmaster.next_task()
-                    if task is None:
+
+               while True:
+                  task = self.taskmaster.next_task()
+                  if not task:
+                     break
+
+                  try:
+                     # prepare task for execution
+                     task.prepare()
+                  except:
+                     task.exception_set()
+                     task.failed()
+                     task.postprocess()
+                  else:
+                     if task.needs_execute():
+                        # dispatch task
+                        self.tp.put(task)
+                        jobs = jobs + 1
+                        print('XXX ENQUEUE {}'.format(jobs))
                         break
-
-                    try:
-                        # prepare task for execution
-                        task.prepare()
-                    except:
-                        task.exception_set()
-                        task.failed()
-                        task.postprocess()
-                    else:
-                        if task.needs_execute():
-                            # dispatch task
-                            self.tp.put(task)
-                            jobs = jobs + 1
-                        else:
-                            task.executed()
-                            task.postprocess()
-
-                if not task and not jobs: break
-
-                # Let any/all completed tasks finish up before we go
-                # back and put the next batch of tasks on the queue.
-                while True:
-                    task, ok = self.tp.get()
-                    jobs = jobs - 1
-
-                    if ok:
+                     else:
                         task.executed()
-                    else:
-                        if self.interrupted():
-                            try:
-                                raise SCons.Errors.BuildError(
-                                    task.targets[0], errstr=interrupt_msg)
-                            except:
-                                task.exception_set()
+                        task.postprocess()
+
+               if not jobs:
+                  break
+
+               while True:
+                  try:
+                     # Dequeue as many completed jobs as we have and
+                     # process them. If we have maxjobs, then force a
+                     # wait so that we don't go over by looping back
+                     # up to next_task. If we have only one job, we
+                     # must wait for it, since otherwise we would busy
+                     # wait.
+                     task, ok = self.tp.resultsQueue.get(block=((jobs == self.maxjobs) or (jobs == 1)))
+                     jobs = jobs - 1
+                     print('XXX DEQUEUE {}'.format(jobs))
+                  except queue.Empty as empty:
+                     break
+
+                  if ok:
+                     task.executed()
+                  else:
+                     if self.interrupted():
+                        try:
+                           raise SCons.Errors.BuildError(
+                              task.targets[0], errstr=interrupt_msg)
+                        except:
+                           task.exception_set()
 
                         # Let the failed() callback function arrange
                         # for the build to stop if that's appropriate.
-                        task.failed()
+                     task.failed()
 
-                    task.postprocess()
-
-                    if self.tp.resultsQueue.empty():
-                        break
+                  task.postprocess()
 
             self.tp.cleanup()
             self.taskmaster.cleanup()
+
+            # while True:
+            #     # Start up as many available tasks as we're
+            #     # allowed to.
+            #     print('XXX BATCHING: {}'.format(jobs))
+            #     while jobs < self.maxjobs:
+            #         task = self.taskmaster.next_task()
+            #         if task is None:
+            #             break
+
+            #         try:
+            #             # prepare task for execution
+            #             task.prepare()
+            #         except:
+            #             task.exception_set()
+            #             task.failed()
+            #             task.postprocess()
+            #         else:
+            #             if task.needs_execute():
+            #                 # dispatch task
+            #                 self.tp.put(task)
+            #                 jobs = jobs + 1
+            #                 # print('XXX ENQUEUE: {}'.format(jobs))
+            #             else:
+            #                 task.executed()
+            #                 task.postprocess()
+
+            #     if not task and not jobs: break
+
+            #     # Let any/all completed tasks finish up before we go
+            #     # back and put the next batch of tasks on the queue.
+            #     print('XXX REAPING: {}'.format(jobs))
+            #     while True:
+            #         task, ok = self.tp.get()
+            #         jobs = jobs - 1
+
+            #         if ok:
+            #             task.executed()
+            #         else:
+            #             if self.interrupted():
+            #                 try:
+            #                     raise SCons.Errors.BuildError(
+            #                         task.targets[0], errstr=interrupt_msg)
+            #                 except:
+            #                     task.exception_set()
+
+            #             # Let the failed() callback function arrange
+            #             # for the build to stop if that's appropriate.
+            #             task.failed()
+
+            #         task.postprocess()
+
+            #         if self.tp.resultsQueue.empty():
+            #             break
+
+            #     print('XXX REAPING STOP: {}'.format(jobs))
+
+            # self.tp.cleanup()
+            # self.taskmaster.cleanup()
 
 # Local Variables:
 # tab-width:4
