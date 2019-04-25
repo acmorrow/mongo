@@ -376,6 +376,8 @@ else:
 
             while True:
 
+               # Process jobs until we find one that requires
+               # execution, and enqueue it.
                while True:
                   task = self.taskmaster.next_task()
                   if not task:
@@ -399,21 +401,42 @@ else:
                         task.executed()
                         task.postprocess()
 
-               if not jobs:
+
+               # If 'task' is true-ish, then we enqueued a new
+               # task. If 'task' is falseish, then we didn't. If we
+               # didn't enqueue a task and we don't have any jobs
+               # pending, then there is nothing left to do.
+               if not (task or jobs):
                   break
 
-               while True:
+
+               # If we are at maxjobs, then force a wait for a job
+               # completion so that we don't go over the limit by
+               # looping back up to next_task. If we didn't find any
+               # new tasks above, we must also block so that we don't
+               # busy loop.
+               should_block = False
+               should_block |= (jobs == self.maxjobs)
+               should_block |= (task == None)
+
+               while jobs:
                   try:
-                     # Dequeue as many completed jobs as we have and
-                     # process them. If we have maxjobs, then force a
-                     # wait so that we don't go over by looping back
-                     # up to next_task. If we have only one job, we
-                     # must wait for it, since otherwise we would busy
-                     # wait.
-                     task, ok = self.tp.resultsQueue.get(block=((jobs == self.maxjobs) or (jobs == 1)))
+                     task, ok = self.tp.resultsQueue.get(block=should_block)
                      jobs = jobs - 1
-                     print('XXX DEQUEUE {}'.format(jobs))
+                     print('XXX DEQUEUE {} {} {}'.format(jobs, task==None, should_block))
+
+                     # We waited for a job to complete. We don't need
+                     # to wait again, but we can dequeue any
+                     # additional completed jobs that are available
+                     # without waiting.
+                     should_block = False
+
                   except queue.Empty as empty:
+                     # We did a non-blocking wait, but there was
+                     # nothing ready yet. See if we can find another
+                     # task to enqueue. If we can't we will end up
+                     # back in this loop but we will do a blocking
+                     # wait.
                      break
 
                   if ok:
