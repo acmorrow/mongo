@@ -451,6 +451,8 @@ env.Library(
     ],
 )
 
+Return()
+
 env.CppLibfuzzerTest(
     target='key_string_to_bson_fuzzer',
     source=[
