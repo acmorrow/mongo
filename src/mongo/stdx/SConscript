@@ -26,11 +26,16 @@ stdxEnv.Library(
     source=[
         'set_terminate_internals.cpp',
     ],
-    LIBDEPS=[
-        # There should be no linking dependencies upon any other libraries, for `libstdx`.
-        # This library is a shim filling in for deficiencies in various standard library
-        # implementations.  There should never be any link-time dependencies into mongo internals.
 
+    # There should be no linking dependencies upon any other libraries, for `libstdx`.
+    # This library is a shim filling in for deficiencies in various standard library
+    # implementations.  There should never be any link-time dependencies into mongo internals.
+
+    LIBDEPS_COMMON=[
+        # This must remain empty, per the above note
+    ],
+    LIBDEPS=[
+        # As above
     ],
     SYSLIBDEPS=[
         # As above

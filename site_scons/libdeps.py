@@ -281,6 +281,9 @@ def make_libdeps_emitter(dependency_builder, dependency_map=dependency_visibilit
         prereqs.extend(
             dependency(l, dependency_map[dependency.Private])
             for l in env.get(libdeps_env_var + '_PRIVATE', []) if l)
+        prereqs.extend(
+            dependency(l, dependency_map[dependency.Private])
+            for l in env.get(libdeps_env_var + '_COMMON', []) if l)
 
         lib_builder_prefix = lib_builder.get_prefix(env)
         lib_builder_suffix = lib_builder.get_suffix(env)

@@ -456,7 +456,7 @@ add_option("cxx-std",
 add_option("dynamic-cxx-runtime",
     choices=["on", "off", "auto"],
     const="on",
-    default="on",
+    default="auto",
     help="Select whether the C++ runtime should be linked dynamically or statically",
     nargs="?",
     type="choice",
@@ -1504,15 +1504,16 @@ if env.ToolchainIs('msvc'):
     env.Append(CCFLAGS=[winRuntimeLibMap[(dynamicCRT != "off", debugBuild)]])
 
 else:
-    if not env.ToolchainIs('gcc', 'clang'):
-        env.FatalError("Don't know how to request a static C++ runtime on this toolchain")
-
     if dynamicCRT == "auto":
         # TODO: How should we detect if you are using the system toolchain? Is it even a meaningful
         # question?
         pass
 
-    if not dynamicCRT:
+    if dynamicCRT == "off":
+
+        if not env.ToolchainIs('gcc', 'clang'):
+            env.FatalError("Don't know how to request a static C++ runtime on this toolchain")
+
         env.AppendUnique(
             LINKFLAGS=[
                 # This tells the compiler to wrap -lstdc++ in -Bstatic -Bdynamic, so that we pull in
@@ -1521,6 +1522,11 @@ else:
 
                 # This tells the compiler to link to libgcc and libgcc_eh, rather than libgcc_s.
                 "-static-libgcc"
+            ],
+
+            # TODO: Can't do this now because the library won't exist for the conf checks
+            LIBDEPS_COMMON=[
+                '$BUILD_DIR/mongo/stdx/stdx',
             ],
         )
 
