@@ -453,6 +453,15 @@ add_option("cxx-std",
     help="Select the C++ langauge standard to build with",
 )
 
+add_option("dynamic-cxx-runtime",
+    choices=["on", "off", "auto"],
+    const="on",
+    default="on",
+    help="Select whether the C++ runtime should be linked dynamically or statically",
+    nargs="?",
+    type="choice",
+)
+
 def find_mongo_custom_variables():
     files = []
     for path in sys.path:
@@ -1474,6 +1483,47 @@ if link_model.startswith("dynamic"):
                     return []
                 env['LIBDEPS_TAG_EXPANSIONS'].append(libdeps_tags_expand_incomplete)
 
+
+# Set up the static C++ runtime library if requested.
+dynamicCRT = get_option("dynamic-cxx-runtime")
+if env.ToolchainIs('msvc'):
+    # /MD:  use the multithreaded, DLL version of the run-time library
+    # /MT:  use the multithreaded, static version of the run-time library
+    # /MDd: As /MD but also defines _DEBUG
+    # /MTd: As /MT but also defines _DEBUG
+
+    winRuntimeLibMap = {
+          #dyn   #dbg
+        ( False, False ) : "/MT",
+        ( False, True  ) : "/MTd",
+        ( True,  False ) : "/MD",
+        ( True,  True  ) : "/MDd",
+    }
+
+    # On Windows, the dynamic CRT is the default.
+    env.Append(CCFLAGS=[winRuntimeLibMap[(dynamicCRT != "off", debugBuild)]])
+
+else:
+    if not env.ToolchainIs('gcc', 'clang'):
+        env.FatalError("Don't know how to request a static C++ runtime on this toolchain")
+
+    if dynamicCRT == "auto":
+        # TODO: How should we detect if you are using the system toolchain? Is it even a meaningful
+        # question?
+        pass
+
+    if not dynamicCRT:
+        env.AppendUnique(
+            LINKFLAGS=[
+                # This tells the compiler to wrap -lstdc++ in -Bstatic -Bdynamic, so that we pull in
+                # the static C++ runtime library.
+                "-static-libstdc++",
+
+                # This tells the compiler to link to libgcc and libgcc_eh, rather than libgcc_s.
+                "-static-libgcc"
+            ],
+        )
+
 if optBuild:
     env.SetConfigHeaderDefine("MONGO_CONFIG_OPTIMIZED_BUILD")
 
@@ -1768,11 +1818,6 @@ elif env.TargetOSIs('windows'):
     #
     # Please also note that this has nothing to do with _DEBUG or optimization.
     env.Append( LINKFLAGS=["/DEBUG"] )
-
-    # /MD:  use the multithreaded, DLL version of the run-time library (MSVCRT.lib/MSVCR###.DLL)
-    # /MDd: Defines _DEBUG, _MT, _DLL, and uses MSVCRTD.lib/MSVCRD###.DLL
-
-    env.Append(CCFLAGS=["/MDd" if debugBuild else "/MD"])
 
     if optBuild:
         # /O1:  optimize for size
@@ -4030,6 +4075,7 @@ module_sconscripts = moduleconfig.get_module_sconscripts(mongo_modules)
 # and they are exported here, as well.
 Export([
     'debugBuild',
+    'dynamicCRT',
     'endian',
     'free_monitoring',
     'get_option',

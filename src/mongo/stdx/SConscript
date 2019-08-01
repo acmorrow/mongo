@@ -4,24 +4,48 @@ Import("env")
 
 env = env.Clone()
 
+stdxEnv = env.Clone()
+stdxEnv.AppendUnique(
+    LINKFLAGS=[
+        # If we have -static-libstdc++ on the link line, then we want
+        # to injest the entire C++ runtime library into libstdx, not
+        # just referenced symbols. If we don't have it. then having
+        # this won't have any effect.
+        '$LINK_WHOLE_ARCHIVE_LIB_START',
+
+        # For whatever reason, '-lgcc -lgcc_eh' appears multiple times
+        # on the link line when building with --static-libgcc. Without
+        # this, we would get duplicate symbol errors because of that,
+        # since we are pulling in the whole library unconditionally.
+        "-Wl,-z,muldefs",
+    ],
+)
+
+stdxEnv.Library(
+    target='stdx',
+    source=[
+        'set_terminate_internals.cpp',
+    ],
+    LIBDEPS=[
+        # There should be no linking dependencies upon any other libraries, for `libstdx`.
+        # This library is a shim filling in for deficiencies in various standard library
+        # implementations.  There should never be any link-time dependencies into mongo internals.
+
+    ],
+    SYSLIBDEPS=[
+        # As above
+    ],
+    LIBS=[
+        # As above
+    ],
+)
+
 env.Benchmark(
     target='condition_variable_bm',
     source=[
         'condition_variable_bm.cpp',
     ],
     LIBDEPS=[
-    ],
-)
-
-env.Library(
-    target='stdx',
-    source=[
-        'set_terminate_internals.cpp',
-    ],
-    LIBDEPS=[
-        # Ideally, there should be no linking dependencies upon any other libraries, for `libstdx`.
-        # This library is a shim filling in for deficiencies in various standard library
-        # implementations.  There should never be any link-time dependencies into mongo internals.
     ],
 )
 
