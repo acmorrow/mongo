@@ -1523,11 +1523,6 @@ else:
                 # This tells the compiler to link to libgcc and libgcc_eh, rather than libgcc_s.
                 "-static-libgcc"
             ],
-
-            # TODO: Can't do this now because the library won't exist for the conf checks
-            LIBDEPS_COMMON=[
-                '$BUILD_DIR/mongo/stdx/stdx',
-            ],
         )
 
 if optBuild:

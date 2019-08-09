@@ -3,12 +3,22 @@
 # This is the principle SConscript file, invoked by the SConstruct.  Its job is
 # to delegate to any and all per-module SConscript files.
 
+Import('dynamicCRT')
 Import('env')
 Import('module_sconscripts')
 
 # NOTE: We must do third_party first as it adds methods to the environment
 # that we need in the mongo sconscript
 env = env.Clone()
+
+# TODO: This doesn't work here, but works when moved below line 22. Why?
+if not env.ToolchainIs('msvc') and dynamicCRT == "off":
+    env.AppendUnique(
+        LIBDEPS_COMMON=[
+            '$BUILD_DIR/mongo/stdx/stdx',
+        ],
+    )
+
 env.SConscript('third_party/SConscript', exports=['env'])
 
 # Inject common dependencies from third_party globally for all core mongo code
