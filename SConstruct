@@ -3843,11 +3843,6 @@ if get_option('install-mode') == 'hygienic':
 
     })
 
-    if env.TargetOSIs('windows'):
-        # On windows, we want the runtime role to depend on the debug role so that PDBs
-        # end in the runtime package.
-        env.AddRoleDependencies(role="runtime", dependencies=["debug"])
-
     env.AddPackageNameAlias(
         component="dist",
         role="runtime",
