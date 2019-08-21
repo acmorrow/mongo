@@ -135,32 +135,32 @@ def declare_roles(env, roles, base_role=None, meta_role=None):
 
     role_names = [role.name for role in roles]
     if len(role_names) != len(set(role_names)):
-        # TODO: How do we raise an error here?
-        print('EEE1')
-        pass
+         raise Exception(
+            "Cannot declare duplicate roles"
+        )
 
     if base_role is not None and base_role not in role_names:
-        # TODO: error
-        print('EEE2')
-        pass
+         raise Exception(
+             "A base_role argument was provided but it does not name a declared role"
+        )
 
     if meta_role is not None and meta_role not in role_names:
-        # TODO: error
-        print('EEE3')
-        pass
+        raise Exception(
+             "A meta_role argument was provided but it does not name a declared role"
+        )
 
     silents = [role for role in roles if role.silent]
     if len(silents) > 1:
-        # TODO: error
-        print('EEE4')
-        pass
+        raise Exception(
+             "No more than one role can be declared as silent"
+        )
 
     # If a base role was given, then add it as a dependency of every
     # role that isn't the base role (which would be circular).
-    #if base_role:
-    #    for role in roles:
-    #        if role.name != base_role:
-    #            role.dependencies.add(base_role)
+    if base_role:
+        for role in roles:
+            if role.name != base_role:
+                role.dependencies.add(base_role)
 
     # Become a dictionary, so we can look up roles easily.
     roles = { role.name : role for role in roles }
@@ -172,7 +172,7 @@ def declare_roles(env, roles, base_role=None, meta_role=None):
 
     # TODO: Check for DAG
 
-    # TODO: What if base_role or meta_role is really none?
+    # TODO: What if base_role or meta_role is really None?
     env[BASE_ROLE] = base_role
     env[META_ROLE] = meta_role
     env[ROLE_DECLARATIONS] = roles
