@@ -3758,6 +3758,44 @@ if get_option('install-mode') == 'hygienic':
     env["AIB_TARBALL_SUFFIX"] = "tgz"
     env.Tool('auto_install_binaries')
 
+    env.DeclareRoles(
+        roles=[
+
+            env.DeclareRole(
+                name="base",
+            ),
+
+            env.DeclareRole(
+                name="debug",
+            ),
+
+            env.DeclareRole(
+                name="dev",
+                dependencies={
+                    "runtime"
+                },
+            ),
+
+            env.DeclareRole(
+                name="meta",
+            ),
+
+            env.DeclareRole(
+                name="runtime",
+                dependencies={
+                    # On windows, we want the runtime role to depend
+                    # on the debug role so that PDBs end in the
+                    # runtime package.
+                    "debug" if env.TargetOSIs('windows') else None,
+                },
+                transitive=True,
+                silent=True,
+            ),
+        ],
+        base_role="base",
+        meta_role="meta",
+    )
+
     env.AddSuffixMapping({
         "$PROGSUFFIX": env.SuffixMap(
             directory="$PREFIX_BINDIR",
@@ -3765,7 +3803,7 @@ if get_option('install-mode') == 'hygienic':
                 "runtime",
             ]
         ),
-        
+
         "$LIBSUFFIX": env.SuffixMap(
             directory="$PREFIX_LIBDIR",
             default_roles=[
@@ -3788,7 +3826,7 @@ if get_option('install-mode') == 'hygienic':
                 "debug",
             ]
         ),
-        
+
         ".dSYM": env.SuffixMap(
             directory="$PREFIX_DEBUGDIR",
             default_roles=[
@@ -3803,19 +3841,6 @@ if get_option('install-mode') == 'hygienic':
             ]
         ),
 
-        ".lib": env.SuffixMap(
-            directory="$PREFIX_LIBDIR",
-            default_roles=[
-                "dev"
-            ]
-        ),
-        
-        ".h": env.SuffixMap(
-            directory="$PREFIX_INCLUDEDIR",
-            default_roles=[
-                "dev",
-            ]
-        ),
     })
 
     if env.TargetOSIs('windows'):
