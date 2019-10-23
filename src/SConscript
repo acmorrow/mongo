@@ -12,7 +12,7 @@ Import('module_sconscripts')
 env = env.Clone()
 
 # TODO: This doesn't work here, but works when moved below line 22. Why?
-if not env.ToolchainIs('msvc') and dynamicCRT == "off":
+if False and not env.ToolchainIs('msvc') and dynamicCRT == "off":
     env.AppendUnique(
         LIBDEPS_COMMON=[
             '$BUILD_DIR/mongo/stdx/stdx',

@@ -5,6 +5,7 @@ Import("env")
 env = env.Clone()
 
 stdxEnv = env.Clone()
+
 stdxEnv.AppendUnique(
     LINKFLAGS=[
         # If we have -static-libstdc++ on the link line, then we want
@@ -21,6 +22,7 @@ stdxEnv.AppendUnique(
     ],
 )
 
+print('XXX')
 stdxEnv.Library(
     target='stdx',
     source=[
@@ -32,7 +34,7 @@ stdxEnv.Library(
     # implementations.  There should never be any link-time dependencies into mongo internals.
 
     LIBDEPS_COMMON=[
-        # This must remain empty, per the above note
+       # This must remain empty, per the above note
     ],
     LIBDEPS=[
         # As above
