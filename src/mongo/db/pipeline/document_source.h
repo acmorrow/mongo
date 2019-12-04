@@ -57,6 +57,7 @@
 #include "mongo/db/pipeline/stage_constraints.h"
 #include "mongo/db/query/explain_options.h"
 #include "mongo/util/intrusive_counter.h"
+#include "mongo/db/exec/scoped_timer.h"
 
 namespace mongo {
 
@@ -247,7 +248,7 @@ public:
      * return it) before asking for another result. Failing to do so can result in extra work, since
      * the Document/Value library must copy data on write when that data has a refcount above one.
      */
-    GetNextResult getNext();
+    inline GetNextResult getNext();
 
     /**
      * Returns a struct containing information about any special constraints imposed on using this
@@ -533,6 +534,26 @@ private:
      */
     virtual Value serialize(
         boost::optional<ExplainOptions::Verbosity> explain = boost::none) const = 0;
+
+    void _getNext_inlined_marker() __attribute__((noinline));
 };
+
+inline DocumentSource::GetNextResult DocumentSource::getNext() {
+    pExpCtx->checkForInterrupt();
+    invariant(pExpCtx->opCtx->getServiceContext());
+    invariant(pExpCtx->opCtx->getServiceContext()->getFastClockSource());
+    ScopedTimer timer(pExpCtx->opCtx->getServiceContext()->getFastClockSource(),
+                      &_commonStats.executionTimeMillis);
+    ++_commonStats.works;
+
+    _getNext_inlined_marker();
+
+    GetNextResult next = doGetNext();
+    if (next.isAdvanced()) {
+        ++_commonStats.advanced;
+    }
+    return next;
+}
+
 
 }  // namespace mongo

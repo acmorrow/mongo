@@ -87,19 +87,7 @@ list<intrusive_ptr<DocumentSource>> DocumentSource::parse(
     return it->second(stageSpec, expCtx);
 }
 
-DocumentSource::GetNextResult DocumentSource::getNext() {
-    pExpCtx->checkForInterrupt();
-    invariant(pExpCtx->opCtx->getServiceContext());
-    invariant(pExpCtx->opCtx->getServiceContext()->getFastClockSource());
-    ScopedTimer timer(pExpCtx->opCtx->getServiceContext()->getFastClockSource(),
-                      &_commonStats.executionTimeMillis);
-    ++_commonStats.works;
-
-    GetNextResult next = doGetNext();
-    if (next.isAdvanced()) {
-        ++_commonStats.advanced;
-    }
-    return next;
+void DocumentSource::_getNext_inlined_marker() {
 }
 
 const char* DocumentSource::getSourceName() const {
