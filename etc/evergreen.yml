@@ -1802,6 +1802,9 @@ functions:
         # Enable performance debugging
         extra_args="$extra_args --debug=time"
 
+        # XXX don't commit this.
+        extra_args="$extra_args --cache-disable"
+
         # If we are doing a patch build or we are building a non-push
         # build on the waterfall, then we don't need the --release
         # flag. Otherwise, this is potentially a build that "leaves
