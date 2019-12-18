@@ -155,7 +155,11 @@ add_option('release',
 
 add_option('lto',
     help='enable link time optimizations (experimental, except with MSVC)',
-    nargs=0,
+    choices=['on', 'off'],
+    default='on',
+    const='on',
+    nargs='?',
+    type='choice',
 )
 
 add_option('endian',
@@ -534,7 +538,7 @@ add_option('jlink',
         " jlink value."
         "\n\nExample: --jlink=0.75 --jobs 8 will result in a jlink value of 6",
         const=0.5,
-        default=None,
+        default=1,
         nargs='?',
         type=float)
 
@@ -808,7 +812,7 @@ env_vars.Add('MAXLINELENGTH',
     # across our platforms.
     #
     # See https://support.microsoft.com/en-us/help/830473/command-prompt-cmd.-exe-command-line-string-limitation
-    default=4095)
+    default=2000000)
 
 # Note: This is only really meaningful when configured via a variables file. See the
 # default_buildinfo_environment_data() function for examples of how to use this.
@@ -1560,6 +1564,9 @@ if get_option('git-decider') == 'on':
 # On non-windows platforms, we may need to differentiate between flags being used to target an
 # executable (like -fPIE), vs those being used to target a (shared) library (like -fPIC). To do so,
 # we inject a new family of SCons variables PROG*FLAGS, by reaching into the various COMs.
+#
+# We would also like to ensure that when we use the compiler to drive the link, that we re-iterate
+# any compiler flags on the link line.
 if not env.TargetOSIs('windows'):
     env["CCCOM"] = env["CCCOM"].replace("$CCFLAGS", "$PROGCCFLAGS")
     env["CXXCOM"] = env["CXXCOM"].replace("$CCFLAGS", "$PROGCCFLAGS")
@@ -1573,6 +1580,25 @@ if not env.TargetOSIs('windows'):
 
     env["LINKCOM"] = env["LINKCOM"].replace("$LINKFLAGS", "$PROGLINKFLAGS")
     env["PROGLINKFLAGS"] = ['$LINKFLAGS']
+
+    from SCons.Tool.cxx import iscplusplus
+
+    def smartlink_flags(source, target, env, for_signature):
+        if iscplusplus(source):
+            return '$CXXFLAGS $CCFLAGS'
+        return '$CFLAGS $CCFLAGS'
+    env['SMARTLINKFLAGS'] = smartlink_flags
+
+    def smartshlink_flags(source, target, env, for_signature):
+        if iscplusplus(source):
+            return '$SHCXXFLAGS $SHCCFLAGS'
+        return '$SHCFLAGS $SHCCFLAGS'
+    env['SMARTSHLINKFLAGS'] = smartshlink_flags
+
+    env.PrependUnique(
+        LINKFLAGS=['$SMARTLINKFLAGS'],
+        SHLINKFLAGS=['$SMARTSHLINKFLAGS'],
+    )
 
 if not env.Verbose():
     env.Append( CCCOMSTR = "Compiling $TARGET" )
@@ -1981,7 +2007,7 @@ if env.TargetOSIs('posix'):
                          "-Winvalid-pch"] )
     # env.Append( " -Wconversion" ) TODO: this doesn't really work yet
     if env.TargetOSIs('linux', 'darwin', 'solaris'):
-        if not has_option("disable-warnings-as-errors"):
+        if False and not has_option("disable-warnings-as-errors"):
             env.Append( CCFLAGS=["-Werror"] )
 
     env.Append( CXXFLAGS=["-Woverloaded-virtual"] )
@@ -2014,7 +2040,6 @@ if env.TargetOSIs('posix'):
 
     if env.TargetOSIs('linux') and has_option( "gcov" ):
         env.Append( CCFLAGS=["-fprofile-arcs", "-ftest-coverage", "-fprofile-update=single"] )
-        env.Append( LINKFLAGS=["-fprofile-arcs", "-ftest-coverage", "-fprofile-update=single"] )
 
     if optBuild and not optBuildForSize:
         env.Append( CCFLAGS=["-O2"] )
@@ -2456,22 +2481,11 @@ def doConfigure(myenv):
             AddToCCFLAGSIfSupported(env, '-Wunguarded-availability')
 
     if get_option('runtime-hardening') == "on":
-        # Enable 'strong' stack protection preferentially, but fall back to 'all' if it is not
-        # available. Note that we need to add these to the LINKFLAGS as well, since otherwise we
-        # might not link libssp when we need to (see SERVER-12456).
+        # Enable 'strong' stack protection preferentially, but fall
+        # back to 'all' if it is not available.
         if myenv.ToolchainIs('gcc', 'clang'):
-            if AddToCCFLAGSIfSupported(myenv, '-fstack-protector-strong'):
-                myenv.Append(
-                    LINKFLAGS=[
-                        '-fstack-protector-strong',
-                    ]
-                )
-            elif AddToCCFLAGSIfSupported(myenv, '-fstack-protector-all'):
-                myenv.Append(
-                    LINKFLAGS=[
-                        '-fstack-protector-all',
-                    ]
-                )
+            if not AddToCCFLAGSIfSupported(myenv, '-fstack-protector-strong'):
+                AddToCCFLAGSIfSupported(myenv, '-fstack-protector-all')
 
         if myenv.ToolchainIs('clang'):
             # TODO: There are several interesting things to try here, but they each have
@@ -2504,9 +2518,9 @@ def doConfigure(myenv):
         To specify a target minimum for Darwin platforms, please explicitly add the appropriate options
         to CCFLAGS and LINKFLAGS on the command line:
 
-        macOS: scons CCFLAGS="-mmacosx-version-min=10.11" LINKFLAGS="-mmacosx-version-min=10.11" ..
-        iOS  : scons CCFLAGS="-miphoneos-version-min=10.3" LINKFLAGS="-miphoneos-version-min=10.3" ...
-        tvOS : scons CCFLAGS="-mtvos-version-min=10.3" LINKFLAGS="-tvos-version-min=10.3" ...
+        macOS: scons CCFLAGS="-mmacosx-version-min=10.11" ...
+        iOS  : scons CCFLAGS="-miphoneos-version-min=10.3" ...
+        tvOS : scons CCFLAGS="-mtvos-version-min=10.3" ...
 
         Note that MongoDB requires macOS 10.10, iOS 10.2, or tvOS 10.2 or later.
         """
@@ -2516,9 +2530,7 @@ def doConfigure(myenv):
     if has_option('libc++'):
         if not myenv.ToolchainIs('clang'):
             myenv.FatalError('libc++ is currently only supported for clang')
-        if AddToCXXFLAGSIfSupported(myenv, '-stdlib=libc++'):
-            myenv.Append(LINKFLAGS=['-stdlib=libc++'])
-        else:
+        if not AddToCXXFLAGSIfSupported(myenv, '-stdlib=libc++'):
             myenv.ConfError('libc++ requested, but compiler does not support -stdlib=libc++' )
     else:
         def CheckLibStdCxx(context):
@@ -2783,9 +2795,7 @@ def doConfigure(myenv):
 
                 context.Message("Checking if libfuzzer is supported by the compiler... ")
 
-                context.env.AppendUnique(LINKFLAGS=['-fprofile-instr-generate',
-                                                    '-fcoverage-mapping',
-                                                    '-fsanitize=fuzzer'],
+                context.env.AppendUnique(LINKFLAGS=['-fsanitize=fuzzer'],
                                          CCFLAGS=['-fprofile-instr-generate','-fcoverage-mapping'])
 
                 ret = context.TryLink(textwrap.dedent(test_body), ".cpp")
@@ -2806,13 +2816,11 @@ def doConfigure(myenv):
             sanitizer_list.remove('fuzzer')
             sanitizer_list.append('fuzzer-no-link')
             # These flags are needed to generate a coverage report
-            myenv.Append(LINKFLAGS=['-fprofile-instr-generate','-fcoverage-mapping'])
             myenv.Append(CCFLAGS=['-fprofile-instr-generate','-fcoverage-mapping'])
 
         sanitizer_option = '-fsanitize=' + ','.join(sanitizer_list)
 
         if AddToCCFLAGSIfSupported(myenv, sanitizer_option):
-            myenv.Append(LINKFLAGS=[sanitizer_option])
             myenv.Append(CCFLAGS=['-fno-omit-frame-pointer'])
         else:
             myenv.ConfError('Failed to enable sanitizers with flag: {0}', sanitizer_option )
@@ -2822,9 +2830,7 @@ def doConfigure(myenv):
         if has_option('sanitize-coverage') and using_fsan:
             sanitize_coverage_list = get_option('sanitize-coverage')
             sanitize_coverage_option = '-fsanitize-coverage=' + sanitize_coverage_list
-            if AddToCCFLAGSIfSupported(myenv,sanitize_coverage_option):
-                myenv.Append(LINKFLAGS=[sanitize_coverage_option])
-            else:
+            if not AddToCCFLAGSIfSupported(myenv,sanitize_coverage_option):
                 myenv.ConfError('Failed to enable -fsanitize-coverage with flag: {0}', sanitize_coverage_option )
 
 
@@ -2863,7 +2869,6 @@ def doConfigure(myenv):
             myenv.AppendUnique(
                 SANITIZER_BLACKLIST_GENERATOR=SanitizerBlacklistGenerator,
                 CCFLAGS="${SANITIZER_BLACKLIST_GENERATOR}",
-                LINKFLAGS="${SANITIZER_BLACKLIST_GENERATOR}",
             )
 
         llvm_symbolizer = get_option('llvm-symbolizer')
@@ -2943,7 +2948,7 @@ def doConfigure(myenv):
         # probably built with GCC. That combination appears to cause
         # false positives for the ODR detector. See SERVER-28133 for
         # additional details.
-        if (get_option('detect-odr-violations') and
+        if False and (get_option('detect-odr-violations') and
                 not (myenv.ToolchainIs('clang') and usingLibStdCxx)):
             AddToLINKFLAGSIfSupported(myenv, '-Wl,--detect-odr-violations')
 
@@ -2976,8 +2981,7 @@ def doConfigure(myenv):
         elif myenv.ToolchainIs('gcc', 'clang'):
             # For GCC and clang, the flag is -flto, and we need to pass it both on the compile
             # and link lines.
-            if not AddToCCFLAGSIfSupported(myenv, '-flto') or \
-                    not AddToLINKFLAGSIfSupported(myenv, '-flto'):
+            if not AddToCCFLAGSIfSupported(myenv, '-flto'):
                 myenv.ConfError("Link time optimization requested, "
                     "but selected compiler does not honor -flto" )
 
