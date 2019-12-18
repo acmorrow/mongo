@@ -155,7 +155,11 @@ add_option('release',
 
 add_option('lto',
     help='enable link time optimizations (experimental, except with MSVC)',
-    nargs=0,
+    choices=['on', 'off'],
+    default='on',
+    const='on',
+    nargs='?',
+    type='choice',
 )
 
 add_option('endian',
@@ -519,7 +523,7 @@ add_option('jlink',
         " jlink value."
         "\n\nExample: --jlink=0.75 --jobs 8 will result in a jlink value of 6",
         const=0.5,
-        default=None,
+        default=1,
         nargs='?',
         type=float)
 
@@ -793,7 +797,7 @@ env_vars.Add('MAXLINELENGTH',
     # across our platforms.
     #
     # See https://support.microsoft.com/en-us/help/830473/command-prompt-cmd.-exe-command-line-string-limitation
-    default=4095)
+    default=2000000)
 
 # Note: This is only really meaningful when configured via a variables file. See the
 # default_buildinfo_environment_data() function for examples of how to use this.
@@ -1977,21 +1981,25 @@ if env.TargetOSIs('posix'):
             )
 
     # -Winvalid-pch Warn if a precompiled header (see Precompiled Headers) is found in the search path but can't be used.
-    env.Append( CCFLAGS=["-fno-omit-frame-pointer",
-                         "-fno-strict-aliasing",
-                         "-fasynchronous-unwind-tables",
-                         "-ggdb" if not env.TargetOSIs('emscripten') else "-g",
-                         "-pthread",
-                         "-Wall",
-                         "-Wsign-compare",
-                         "-Wno-unknown-pragmas",
-                         "-Winvalid-pch"] )
+    env.Append( CCFLAGS=[
+        # "-fno-omit-frame-pointer",
+        # "-fno-strict-aliasing",
+        "-fno-semantic-interposition",
+        "-fvisibility=hidden",
+        "-fasynchronous-unwind-tables",
+        "-ggdb" if not env.TargetOSIs('emscripten') else "-g",
+        "-pthread",
+        "-Wall",
+        "-Wsign-compare",
+        "-Wno-unknown-pragmas",
+        "-Winvalid-pch"] )
+
     # env.Append( " -Wconversion" ) TODO: this doesn't really work yet
     if env.TargetOSIs('linux', 'darwin', 'solaris'):
-        if not has_option("disable-warnings-as-errors"):
+        if False and not has_option("disable-warnings-as-errors"):
             env.Append( CCFLAGS=["-Werror"] )
 
-    env.Append( CXXFLAGS=["-Woverloaded-virtual"] )
+    env.Append( CXXFLAGS=["-Woverloaded-virtual", "-fvisibility-inlines-hidden"] )
     if env.ToolchainIs('clang'):
         env.Append( CXXFLAGS=['-Werror=unused-result'] )
 
@@ -2008,7 +2016,8 @@ if env.TargetOSIs('posix'):
             env.Append( LINKFLAGS=["-Wl,-bind_at_load"] )
     else:
         env.Append( LINKFLAGS=["-Wl,-z,now"] )
-        env.Append( LINKFLAGS=["-rdynamic"] )
+        # env.Append( LINKFLAGS=["-rdynamic"] )
+        env.Append( LINKFLAGS=["-Wl,-Bsymbolic-functions"] )
 
     env.Append( LIBS=[] )
 
@@ -2049,7 +2058,7 @@ if get_option('wiredtiger') == 'on':
         wiredtiger = True
         env.SetConfigHeaderDefine("MONGO_CONFIG_WIREDTIGER_ENABLED")
 
-if env['TARGET_ARCH'] == 'i386':
+if True or env['TARGET_ARCH'] == 'i386':
     # If we are using GCC or clang to target 32 bit, set the ISA minimum to 'nocona',
     # and the tuning to 'generic'. The choice of 'nocona' is selected because it
     #  -- includes MMX extenions which we need for tcmalloc on 32-bit
@@ -2062,7 +2071,9 @@ if env['TARGET_ARCH'] == 'i386':
     # deployed hardware.
 
     if env.ToolchainIs('GCC', 'clang'):
-        env.Append( CCFLAGS=['-march=nocona', '-mtune=generic'] )
+        env.Append(
+            CCFLAGS=['-march=westmere', '-mtune=generic'],
+        )
 
 # Needed for auth tests since key files are stored in git with mode 644.
 if not env.TargetOSIs('windows'):
@@ -2925,7 +2936,7 @@ def doConfigure(myenv):
         # probably built with GCC. That combination appears to cause
         # false positives for the ODR detector. See SERVER-28133 for
         # additional details.
-        if (get_option('detect-odr-violations') and
+        if False and (get_option('detect-odr-violations') and
                 not (myenv.ToolchainIs('clang') and usingLibStdCxx)):
             AddToLINKFLAGSIfSupported(myenv, '-Wl,--detect-odr-violations')
 

@@ -133,9 +133,7 @@ def generate(env):
     # later was a better time to address this. We should also consider
     # moving all bitcode setup into a separate tool.
     bitcode = False
-    if env.TargetOSIs("darwin") and any(
-        flag == "-fembed-bitcode" for flag in env["LINKFLAGS"]
-    ):
+    if env.TargetOSIs('darwin') and any(flag == "-fembed-bitcode" for flag in env['CCFLAGS']):
         bitcode = True
         env.AppendUnique(
             LINKFLAGS=[
