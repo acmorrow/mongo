@@ -2047,7 +2047,7 @@ mobile_se = False
 if get_option('mobile-se') == 'on':
     mobile_se = True
 
-if env['TARGET_ARCH'] == 'i386':
+if True or env['TARGET_ARCH'] == 'i386':
     # If we are using GCC or clang to target 32 bit, set the ISA minimum to 'nocona',
     # and the tuning to 'generic'. The choice of 'nocona' is selected because it
     #  -- includes MMX extenions which we need for tcmalloc on 32-bit
@@ -2060,7 +2060,7 @@ if env['TARGET_ARCH'] == 'i386':
     # deployed hardware.
 
     if env.ToolchainIs('GCC', 'clang'):
-        env.Append( CCFLAGS=['-march=nocona', '-mtune=generic'] )
+        env.Append( CCFLAGS=['-march=skylake', '-mtune=generic'] )
 
 # Needed for auth tests since key files are stored in git with mode 644.
 if not env.TargetOSIs('windows'):
