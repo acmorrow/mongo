@@ -1972,6 +1972,8 @@ if env.TargetOSIs('posix'):
     # -Winvalid-pch Warn if a precompiled header (see Precompiled Headers) is found in the search path but can't be used.
     env.Append( CCFLAGS=["-fno-omit-frame-pointer",
                          "-fno-strict-aliasing",
+                         "-fno-semantic-interposition",
+                         "-fvisibility=hidden",
                          "-fasynchronous-unwind-tables",
                          "-ggdb" if not env.TargetOSIs('emscripten') else "-g",
                          "-pthread",
@@ -1984,7 +1986,7 @@ if env.TargetOSIs('posix'):
         if not has_option("disable-warnings-as-errors"):
             env.Append( CCFLAGS=["-Werror"] )
 
-    env.Append( CXXFLAGS=["-Woverloaded-virtual"] )
+    env.Append( CXXFLAGS=["-Woverloaded-virtual", "-fvisibility-inlines-hidden"] )
     if env.ToolchainIs('clang'):
         env.Append( CXXFLAGS=['-Werror=unused-result'] )
 
@@ -2001,7 +2003,7 @@ if env.TargetOSIs('posix'):
             env.Append( LINKFLAGS=["-Wl,-bind_at_load"] )
     else:
         env.Append( LINKFLAGS=["-Wl,-z,now"] )
-        env.Append( LINKFLAGS=["-rdynamic"] )
+        env.Append( LINKFLAGS=["-Wl,-Bsymbolic-functions"] )
 
     env.Append( LIBS=[] )
 
