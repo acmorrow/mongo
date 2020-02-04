@@ -2072,7 +2072,7 @@ if True or env['TARGET_ARCH'] == 'i386':
 
     if env.ToolchainIs('GCC', 'clang'):
         env.Append(
-            CCFLAGS=['-march=westmere', '-mtune=generic'],
+            CCFLAGS=['-march=skylake', '-mtune=generic'],
         )
 
 # Needed for auth tests since key files are stored in git with mode 644.
