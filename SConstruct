@@ -26,6 +26,7 @@ import mongo
 import mongo.platform as mongo_platform
 import mongo.toolchain as mongo_toolchain
 import mongo.generators as mongo_generators
+import mongo.install_actions as install_actions
 
 EnsurePythonVersion(3, 6)
 EnsureSConsVersion(3, 1, 1)
@@ -134,6 +135,14 @@ add_option('install-mode',
     choices=['legacy', 'hygienic'],
     default='legacy',
     help='select type of installation',
+    nargs=1,
+    type='choice',
+)
+
+add_option('install-action',
+    choices=[*install_actions.available_actions],
+    default='copy',
+    help='select mechanism to use to install files (advanced and dangerous option)',
     nargs=1,
     type='choice',
 )
@@ -1152,6 +1161,9 @@ if has_option('variables-help'):
 unknown_vars = env_vars.UnknownVariables()
 if unknown_vars:
     env.FatalError("Unknown variables specified: {0}", ", ".join(list(unknown_vars.keys())))
+
+
+install_actions.setup(env, get_option('install-action'))
 
 def set_config_header_define(env, varname, varval = 1):
     env['CONFIG_HEADER_DEFINES'][varname] = varval
