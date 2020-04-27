@@ -22,20 +22,63 @@
 
 import os
 
+def gatif(env, entry):
+    stack=[entry]
+    cache=set()
+    files=[]
+    while stack:
+        s = stack.pop()
+        if s in cache:
+            continue
+        cache.add(s)
+
+        files.append(s)
+        # scan_for_transitive_install is memoized so it's safe to call it in
+        # this loop. If it hasn't already run for a file we need to run it
+        # anyway.
+        stack.extend(s.children())
+
+    return sorted(files)
 
 def generate_test_execution_aliases(env, test):
-
     installed = [test]
     if env.get("AUTO_INSTALL_ENABLED", False) and env.GetAutoInstalledFiles(test):
         installed = env.GetAutoInstalledFiles(test)
 
-    target_name = os.path.basename(installed[0].get_path())
+    target_name = os.path.basename(installed[0].path)
     command = env.Command(
         target="#+{}".format(target_name),
-        source=installed,
+        source=installed[0],
         action="${SOURCES[0]} $UNITTEST_FLAGS",
         NINJA_POOL="console",
     )
+
+    outcome_command = env.Command(
+        target=env.File(installed[0]).File('{}.outcome'.format(installed[0])),
+        source=installed[0],
+        action="${SOURCES[0]} $UNITTEST_FLAGS > ${TARGET}",
+    )
+    outcome_command_alias = env.Alias("{}.outcome".format(target_name), outcome_command)
+
+
+    if 'base_test' in target_name or "bson_mutable_test" in target_name:
+        #print('AAA CHILDREN', [str(c) for c in installed[0].children()])
+        #print('AAA ALL CHILDREN', [str(c) for c in installed[0].all_children()])
+        #print('AAA GAIF', [str(c) for c in env.GetAutoInstalledFiles(installed[0])])
+        #print('AAA GTIF', [str(c) for c in env.GetTransitivelyInstalledFiles(installed[0])])
+        #print('AAA GATIF', [str(c) for c in gatif(env, installed[0])])
+
+        def finalize_install_dependencies_callback(env):
+            #print('ZZZ CHILDREN', [str(c) for c in installed[0].children()])
+            #print('ZZZ ALL CHILDREN', [str(c) for c in installed[0].all_children()])
+            #print('ZZZ GAIF', [str(c) for c in env.GetAutoInstalledFiles(installed[0])])
+            #print('ZZZ GTIF', [str(c) for c in env.GetTransitivelyInstalledFiles(installed[0])])
+            #print('ZZZ GATIF', [str(c) for c in gatif(env, installed[0])])
+
+            env.Depends(outcome_command, gatif(env, installed[0]))
+
+        env.RegisterFinalizeInstallDependenciesCallback(finalize_install_dependencies_callback)
+        env.Alias('test-outcomes', outcome_command_alias)
 
     env.Alias("test-execution-aliases", command)
     for source in test.sources:

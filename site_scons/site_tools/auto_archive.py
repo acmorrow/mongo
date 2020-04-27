@@ -277,6 +277,7 @@ def generate(env):
     env[PACKAGE_ALIAS_MAP] = {}
 
     env.AddMethod(add_package_name_alias, "AddPackageNameAlias")
+    env.AddMethod(collect_transitive_files, "CollectTransitiveFiles")
 
     # TODO: $BUILD_ROOT should be $VARIANT_DIR after we fix our dir
     # setup later on.

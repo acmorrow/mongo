@@ -40,7 +40,9 @@ ROLE = "AIB_ROLE"
 ROLE_DECLARATIONS = "AIB_ROLE_DECLARATIONS"
 SUFFIX_MAP = "AIB_SUFFIX_MAP"
 TASKS = "AIB_TASKS"
+REGISTERED_TASKS = "AIB_REGISTERED_TASKS"
 
+_aib_env = None
 
 SuffixMap = namedtuple("SuffixMap", ["directory", "default_role"],)
 
@@ -457,6 +459,14 @@ def finalize_install_dependencies(env):
                     )
                     env.Alias(alias, dependent_aliases)
 
+    for task in env[REGISTERED_TASKS]:
+        task()
+
+
+def register_finalize_install_dependencies_callback(env, cb):
+    def cb_with_env():
+        cb(env)
+    _aib_env[REGISTERED_TASKS].append(cb_with_env)
 
 def auto_install_emitter(target, source, env):
     """When attached to a builder adds an appropriate AutoInstall to that Builder."""
@@ -586,6 +596,8 @@ def generate(env):  # pylint: disable=too-many-statements
         "install": auto_install_task,
     }
 
+    env[REGISTERED_TASKS] = []
+
     env.AddMethod(
         scan_for_transitive_install_pseudobuilder, "GetTransitivelyInstalledFiles"
     )
@@ -597,6 +609,7 @@ def generate(env):  # pylint: disable=too-many-statements
     env.AddMethod(declare_role, "Role")
     env.AddMethod(declare_roles, "DeclareRoles")
     env.AddMethod(finalize_install_dependencies, "FinalizeInstallDependencies")
+    env.AddMethod(register_finalize_install_dependencies_callback, "RegisterFinalizeInstallDependenciesCallback")
     env.AddMethod(suffix_mapping, "SuffixMap")
     env.Tool("install")
 
@@ -625,3 +638,6 @@ def generate(env):  # pylint: disable=too-many-statements
     base_install_builder.target_scanner = SCons.Scanner.Scanner(
         function=scan_for_transitive_install, path_function=None
     )
+
+    global _aib_env
+    _aib_env = env
