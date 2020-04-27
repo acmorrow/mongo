@@ -16,19 +16,26 @@ import os
 
 
 def generate_test_execution_aliases(env, test):
-    hygienic = env.GetOption("install-mode") == "hygienic"
-    if hygienic and getattr(test.attributes, "AIB_INSTALL_ACTIONS", []):
-        installed = getattr(test.attributes, "AIB_INSTALL_ACTIONS")
-    else:
-        installed = [test]
 
-    target_name = os.path.basename(installed[0].get_path())
+    installed = test
+    if env.get("AUTO_INSTALL_ENABLED", False) and env.GetAutoInstalledFiles(test):
+        installed = env.GetAutoInstalledFiles(test)
+    installed = env.Flatten(installed)
+
+    target_name = os.path.basename(installed[0].path)
     command = env.Command(
         target="#+{}".format(target_name),
-        source=installed,
+        source=installed[0],
         action="${SOURCES[0]} $UNITTEST_FLAGS",
         NINJA_POOL="console",
     )
+
+    command2 = env.Command(
+        target=env.File(installed[0]).File('{}.result'.format(installed[0])),
+        source=installed[0],
+        action="${SOURCES[0]} $UNITTEST_FLAGS > ${TARGET}",
+    )
+    env.Alias("tot-{}".format(target_name), command2)
 
     env.Alias("test-execution-aliases", command)
     for source in test.sources:
