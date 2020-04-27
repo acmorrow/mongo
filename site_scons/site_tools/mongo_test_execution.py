@@ -31,11 +31,15 @@ def generate_test_execution_aliases(env, test):
     )
 
     command2 = env.Command(
-        target=env.File(installed[0]).File('{}.result'.format(installed[0])),
+        target=env.File(installed[0]).File('{}.outcome'.format(installed[0])),
         source=installed[0],
         action="${SOURCES[0]} $UNITTEST_FLAGS > ${TARGET}",
     )
-    env.Alias("tot-{}".format(target_name), command2)
+
+    command2_alias = env.Alias("{}.outcome".format(target_name), command2)
+
+    if 'base_test' in target_name or "bson_mutable_test" in target_name:
+        env.Alias('test-outcomes', command2_alias)
 
     env.Alias("test-execution-aliases", command)
     for source in test.sources:
