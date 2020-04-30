@@ -22,6 +22,8 @@
 
 import os
 
+import SCons
+
 def gatif(env, entry):
     stack=[entry]
     cache=set()
@@ -57,7 +59,10 @@ def generate_test_execution_aliases(env, test):
     outcome_command = env.Command(
         target=env.File(installed[0]).File('{}.outcome'.format(installed[0])),
         source=installed[0],
-        action="${SOURCES[0]} $UNITTEST_FLAGS > ${TARGET}",
+        action=SCons.Action.Action(
+            "${SOURCES[0]} $UNITTEST_FLAGS > ${TARGET}",
+            "RUNNING ${SOURCES[0]}"
+        )
     )
     outcome_command_alias = env.Alias("{}.outcome".format(target_name), outcome_command)
 
