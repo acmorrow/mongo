@@ -28,6 +28,7 @@ def gatif(env, entry):
     files=[]
     while stack:
         s = stack.pop()
+
         if s in cache:
             continue
         cache.add(s)
@@ -36,7 +37,7 @@ def gatif(env, entry):
         # scan_for_transitive_install is memoized so it's safe to call it in
         # this loop. If it hasn't already run for a file we need to run it
         # anyway.
-        stack.extend(s.children())
+        stack.extend(sc for sc in s.children() if sc.has_builder())
 
     return sorted(files)
 
