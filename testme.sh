@@ -7,4 +7,5 @@ buildscripts/scons.py \
   --install-action=hardlink \
   ICECC= CCACHE=ccache \
   -j12 \
+  "$@" \
   test-outcomes
