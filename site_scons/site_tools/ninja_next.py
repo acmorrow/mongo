@@ -399,7 +399,6 @@ class NinjaState:
             "CMD": {
                 "command": "cmd /c $env$cmd" if sys.platform == "win32" else "$env$cmd",
                 "description": "Building $out",
-                "pool": "local_pool",
             },
             # We add the deps processing variables to this below. We
             # don't pipe these through cmd.exe on Windows because we
@@ -423,14 +422,12 @@ class NinjaState:
                 "description": "Linking $out",
                 "rspfile": "$out.rsp",
                 "rspfile_content": "$rspc",
-                "pool": "local_pool",
             },
             "AR": {
                 "command": "$env$AR @$out.rsp",
                 "description": "Archiving $out",
                 "rspfile": "$out.rsp",
                 "rspfile_content": "$rspc",
-                "pool": "local_pool",
             },
             "SYMLINK": {
                 "command": (
@@ -500,7 +497,6 @@ class NinjaState:
         }
 
         self.pools = {
-            "local_pool": self.env.GetOption("num_jobs"),
             "install_pool": self.env.GetOption("num_jobs") / 2,
             "scons_pool": 1,
         }

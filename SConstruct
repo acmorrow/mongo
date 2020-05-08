@@ -3855,7 +3855,7 @@ env.Tool('icecream')
 #
 # The presence of the variable ICECC means the icecream tool is
 # enabled and so the default j value should scale accordingly. In this
-# scenario multiply the cpu count by 8 to set a reasonable default since the
+# scenario multiply the cpu count by 16 to set a reasonable default since the
 # cluster can handle many more jobs than your local machine but is
 # still throttled by your cpu count in the sense that you can only
 # handle so many python threads sending out jobs.
@@ -3874,22 +3874,14 @@ if env.GetOption('num_jobs') == altered_num_jobs:
     # give them a very slow build.
     cpu_count = psutil.cpu_count()
     if cpu_count is None:
-        if get_option("ninja") != "disabled":
-            env.FatalError("Cannot auto-determine the appropriate size for the Ninja local_job pool. Please regenerate with an explicit -j argument to SCons")
-        else:
+        if get_option("ninja") == "disabled":
             env.FatalError("Cannot auto-determine the appropriate build paralleism on this platform. Please build with an explicit -j argument to SCons")
 
-    if 'ICECC' in env and env['ICECC'] and get_option("ninja") == "disabled":
-        # If SCons is driving and we are using icecream, scale up the
-        # number of jobs. The icerun integration will prevent us from
-        # overloading the local system.
-        env.SetOption('num_jobs', 8 * cpu_count)
-    else:
-        # Otherwise, either icecream isn't in play, so just use local
-        # concurrency for SCons builds, or we are generating for
-        # Ninja, in which case num_jobs controls the size of the local
-        # pool. Scale that up to the number of local CPUs.
-        env.SetOption('num_jobs', cpu_count)
+    # If we are using icecream, scale up the number of jobs. The
+    # icerun integration will prevent us from overloading the local
+    # system. Otherwise just use the local concurrency for SCons builds,
+    using_icecream = 'ICECC' in env and env['ICECC']
+    env.SetOption('num_jobs', (16 if using_icecream else 1) * cpu_count)
 
 if get_option('ninja') != 'disabled':
 
@@ -3949,7 +3941,6 @@ if get_option('ninja') != 'disabled':
         command="cmd /c $cmd" if env.TargetOSIs("windows") else "$cmd",
         description="Generating $out",
         deps="msvc",
-        pool="local_pool",
     )
 
     def get_idlc_command(env, node, action, targets, sources, executor=None):
