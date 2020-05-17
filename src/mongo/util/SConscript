@@ -261,9 +261,12 @@ if env['MONGO_ALLOCATOR'] in ['tcmalloc', 'tcmalloc-experimental']:
             'processinfo',
         ],
         PROGDEPS_DEPENDENTS=[
-            '$BUILD_DIR/mongo/mongod',
             '$BUILD_DIR/mongo/mongos',
         ],
+        LIBDEPS_DEPENDENTS=[
+            '$BUILD_DIR/mongo/mongod_main',
+        ],
+
     )
 
 env.Library(

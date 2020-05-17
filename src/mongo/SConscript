@@ -336,7 +336,7 @@ env.Library(
 
 if env.TargetOSIs('windows'):
     generatedDbManifest = env.Substfile(
-        'db/db.manifest.in',
+        'db/mongod.manifest.in',
         SUBST_DICT=[
             ('@mongo_version_major@', version_parts[0]),
             ('@mongo_version_minor@', version_parts[1]),
@@ -346,15 +346,36 @@ if env.TargetOSIs('windows'):
         ])
 
     env.Alias('generated-sources', generatedDbManifest)
-    env.Depends("db/db.res", generatedDbManifest)
+    env.Depends("db/mongod.res", generatedDbManifest)
 
 mongod = env.Program(
     target="mongod",
     source=[
-        'db/db.cpp',
+        'db/mongod.cpp'
+    ] + env.WindowsResourceFile("db/mongod.rc"),
+    LIBDEPS=[
+        'base',
+        'mongod_main',
+        'util/quick_exit',
+    ],
+    AIB_COMPONENT="mongod",
+    AIB_COMPONENTS_EXTRA=[
+        "core",
+        "default",
+        "dist",
+        "dist-test",
+        "servers",
+        "integration-tests",
+    ],
+)
+
+env.Library(
+    target="mongod_main",
+    source=[
+        'db/mongod_main.cpp',
         'db/logical_session_cache_factory_mongod.cpp',
         'db/read_write_concern_defaults_cache_lookup_mongod.cpp',
-    ] + env.WindowsResourceFile("db/db.rc"),
+    ],
     LIBDEPS_PRIVATE=[
         '$BUILD_DIR/third_party/shim_snappy',
         'base',
@@ -474,15 +495,6 @@ mongod = env.Program(
         'util/periodic_runner_factory',
         'util/version_impl',
         'watchdog/watchdog_mongod',
-    ],
-    AIB_COMPONENT="mongod",
-    AIB_COMPONENTS_EXTRA=[
-        "core",
-        "default",
-        "dist",
-        "dist-test",
-        "servers",
-        "integration-tests",
     ],
 )
 
