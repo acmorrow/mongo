@@ -261,7 +261,7 @@ if env['MONGO_ALLOCATOR'] in ['tcmalloc', 'tcmalloc-experimental']:
             'processinfo',
         ],
         LIBDEPS_DEPENDENTS=[
-            '$BUILD_DIR/mongo/mongos_main',
+            '$BUILD_DIR/mongo/mongos_initializers',
             '$BUILD_DIR/mongo/mongod_initializers',
         ],
 

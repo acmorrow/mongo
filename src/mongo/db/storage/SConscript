@@ -188,7 +188,7 @@ env.Library(
               '$BUILD_DIR/mongo/db/service_context'],
     LIBDEPS_DEPENDENTS=[
         '$BUILD_DIR/mongo/mongod_initializers',
-        '$BUILD_DIR/mongo/mongos_main',
+        '$BUILD_DIR/mongo/mongos_initializers',
         ],
     )
 
