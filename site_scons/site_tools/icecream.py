@@ -25,6 +25,7 @@ import SCons
 import os
 import re
 import subprocess
+import urllib
 
 from pkg_resources import parse_version
 
@@ -50,12 +51,12 @@ class _BoundSubstitution:
 
 def icecc_create_env(env, target, source, for_signature):
     # Safe to assume unix here because icecream only works on Unix
-    mkdir = "mkdir -p ${ICECC_VERSION.Dir('').abspath}"
+    mkdir = "mkdir -p ${TARGET.dir}"
 
     # Create the env, use awk to get just the tarball name and we store it in
     # the shell variable $ICECC_VERSION_TMP so the subsequent mv command and
     # store it in a known location. Add any files requested from the user environment.
-    create_env = "ICECC_VERSION_TMP=$$($ICECC_CREATE_ENV --$ICECC_COMPILER_TYPE $CC $CXX"
+    create_env = "ICECC_VERSION_TMP=$$(${SOURCES[0]} --$ICECC_COMPILER_TYPE ${SOURCES[1]} ${SOURCES[2]}"
     for addfile in env.get('ICECC_CREATE_ENV_ADDFILES', []):
         if (type(addfile) == tuple
             and len(addfile) == 2):
@@ -64,10 +65,10 @@ def icecc_create_env(env, target, source, for_signature):
             create_env += " --addfile {}={}".format(
                 env.File(addfile[0]).srcnode().abspath,
                 env.File(addfile[1]).srcnode().abspath)
-            env.Depends('$ICECC_VERSION', addfile[1])
+            env.Depends(target, addfile[1])
         elif type(addfile) == str:
             create_env += " --addfile {}".format(env.File(addfile).srcnode().abspath)
-            env.Depends('$ICECC_VERSION', addfile)
+            env.Depends(target, addfile)
         else:
             # NOTE: abspath is required by icecream because of
             # this line in icecc-create-env:
@@ -101,20 +102,6 @@ def generate(env):
         and os.path.exists('/proc/cpuinfo')):
         env.AppendUnique(ICECC_CREATE_ENV_ADDFILES=[('/proc/cpuinfo', '/dev/null')])
 
-    env["ICECCENVCOMSTR"] = env.get("ICECCENVCOMSTR", "Generating environment: $TARGET")
-    env["ICECC_COMPILER_TYPE"] = env.get(
-        "ICECC_COMPILER_TYPE", os.path.basename(env.WhereIs("${CC}"))
-    )
-    env.Append(
-        BUILDERS={
-            "IcecreamEnv": SCons.Builder.Builder(
-                action=SCons.Action.CommandGeneratorAction(
-                    icecc_create_env, {"comstr": "$ICECCENVCOMSTR"},
-                )
-            )
-        }
-    )
-
     # If we are going to load the ccache tool, but we haven't done so
     # yet, then explicitly do it now. We need the ccache tool to be in
     # place before we setup icecream because we need to do things a
@@ -134,42 +121,33 @@ def generate(env):
     # Absoluteify, for parity with ICECC
     env["ICERUN"] = env.WhereIs("$ICERUN")
 
-    env["ICECC_CREATE_ENV"] = env.WhereIs(
-        env.get("ICECC_CREATE_ENV", "icecc-create-env")
-    )
+    if not "ICECC_CREATE_ENV" in env:
+        env["ICECC_CREATE_ENV"] = env.File("$ICECC").File("icecc-create-env")
+
+    # Absoluteify, for parity with ICECC
+    env["ICECC_CREATE_ENV"] = env.WhereIs("$ICECC_CREATE_ENV")
 
     # Make CC and CXX absolute paths too. It is better for icecc.
     env["CC"] = env.WhereIs("$CC")
     env["CXX"] = env.WhereIs("$CXX")
 
-    have_explicit_icecc_version = 'ICECC_VERSION' in env and bool(env['ICECC_VERSION'])
-    have_icecc_version_url = have_explicit_icecc_version and env["ICECC_VERSION"].startswith("http")
+    if not 'ICECREAM_TARGET_DIR' in env:
+        # TODO: This is MongoDB specific
+        env['ICECREAM_TARGET_DIR'] = env.Dir('$BUILD_ROOT/scons/icecream')
 
-    if have_explicit_icecc_version and not have_icecc_version_url:
-        icecc_version_file = env.File('$ICECC_VERSION')
-        if not icecc_version_file.exists():
-            raise Exception(
-                'The ICECC_VERSION variable set set to {}, but this file does not exist'.format(icecc_version_file)
-            )
-        env['ICECC_VERSION'] = icecc_version_file
-    else:
-        # Generate the deterministic name for our tarball
-        icecc_version_target_filename = env.subst("${CC}${CXX}.tar.gz").replace("/", "_")[
-            1:
-        ]
-        icecc_version_dir = env.Dir("$BUILD_ROOT/scons/icecc")
-        icecc_known_version = icecc_version_dir.File(icecc_version_target_filename)
+    if 'ICECC_VERSION' in env and bool(env['ICECC_VERSION']):
 
-        if have_icecc_version_url:
-            # We do the above weaker validation as opposed to
-            # urllib.urlparse (or similar). We really only support http
-            # URLs here and any other validation either requires a third
-            # party module or accepts things we don't.
-            env["ICECC_VERSION_URL"] = env["ICECC_VERSION"]
-            env["ICECC_VERSION"] = icecc_known_version
+        # TODO: Handle URLS
+
+        if env["ICECC_VERSION"].startswith("http"):
+
+            quoted = urllib.parse.quote(env['ICECC_VERSION'], safe=[])
 
             # Use curl / wget to download the toolchain because SCons (and ninja)
             # are better at running shell commands than Python functions.
+            #
+            # TODO: This all happens SCons side now. Should we just use python to
+            # fetch instead?
             curl = env.WhereIs("curl")
             wget = env.WhereIs("wget")
 
@@ -182,55 +160,227 @@ def generate(env):
                     "You have specified an ICECC_VERSION that is a URL but you have neither wget nor curl installed."
                 )
 
-            env.Command(
-                target="$ICECC_VERSION",
-                source=["$CC", "$CXX"],
+            # Make a clone so that the assignment to ICECC_VERSION doesn't perturb the
+            # download URL.
+            downloadEnv = env.Clone()
+            env['ICECC_VERSION'] = icecc_version_file = downloadEnv.Command(
+                target=f"$ICECREAM_TARGET_DIR/{quoted}",
+                source=[env.Value(quoted)],
                 action=[
-                    cmdstr + " -o $TARGET $ICECC_VERSION_URL",
+                    f"{cmdstr} -o $TARGET $ICECC_VERSION",
                 ],
-            )
+                NINJA_SKIP=True,
+            )[0]
+
         else:
-            # Make a predictable name for the toolchain
-            env["ICECC_VERSION"] = env.File(icecc_known_version)
-            env.IcecreamEnv(
-                target="$ICECC_VERSION",
-                source=["$ICECC_CREATE_ENV", "$CC", "$CXX"],
-            )
+            # Convert the users selection into a File node and do some basic validation
+            env['ICECC_VERSION'] = icecc_version_file = env.File('$ICECC_VERSION')
 
-        # Our ICECC_VERSION isn't just a file, so we need to make
-        # things depend on it to ensure that it comes into being at
-        # the right time. Don't do that for conftests though: we never
-        # want to run them remote.
-        def icecc_toolchain_dependency_emitter(target, source, env):
-            if "conftest" not in str(target[0]):
-                env.Requires(target, "$ICECC_VERSION")
-            return target, source
-
-        # Cribbed from Tool/cc.py and Tool/c++.py. It would be better if
-        # we could obtain this from SCons.
-        _CSuffixes = [".c"]
-        if not SCons.Util.case_sensitive_suffixes(".c", ".C"):
-            _CSuffixes.append(".C")
-
-        _CXXSuffixes = [".cpp", ".cc", ".cxx", ".c++", ".C++"]
-        if SCons.Util.case_sensitive_suffixes(".c", ".C"):
-            _CXXSuffixes.append(".C")
-
-        suffixes = _CSuffixes + _CXXSuffixes
-        for object_builder in SCons.Tool.createObjBuilders(env):
-            emitterdict = object_builder.builder.emitter
-            for suffix in emitterdict.keys():
-                if not suffix in suffixes:
-                    continue
-                base = emitterdict[suffix]
-                emitterdict[suffix] = SCons.Builder.ListEmitter(
-                    [base, icecc_toolchain_dependency_emitter]
+            if not icecc_version_file.exists():
+                raise Exception(
+                    'The ICECC_VERSION variable set set to {}, but this file does not exist'.format(icecc_version_file)
                 )
+
+        # TODO: Tar.gz suffix check
+
+        # This is what we are going to call the file names as known to SCons on disk
+        env["ICECC_VERSION_ID"] = "user_provided." + icecc_version_file.name;
+
+    else:
+
+        env["ICECC_COMPILER_TYPE"] = env.get(
+            "ICECC_COMPILER_TYPE", os.path.basename(env.WhereIs("${CC}"))
+        )
+
+        # This is what we are going to call the file names as known to SCons on disk. We do the
+        # subst early so that we can call `replace` on the result.
+        env["ICECC_VERSION_ID"] = env.subst("icecc-create-env.${CC}${CXX}.tar.gz").replace("/", "_")
+
+        # Make a new environment for this builder so we don't add it to the global environment,
+        buildEnv = env.Clone()
+        buildEnv["ICECCENVCOMSTR"] = buildEnv.get("ICECCENVCOMSTR", "Generating environment: $TARGET")
+        buildEnv.Append(
+            BUILDERS={
+                "IcecreamEnv": SCons.Builder.Builder(
+                    action=SCons.Action.CommandGeneratorAction(
+                        icecc_create_env, {"comstr": "$ICECCENVCOMSTR"},
+                    )
+                )
+            }
+        )
+
+        env["ICECC_VERSION"] = icecc_version_file = buildEnv.IcecreamEnv(
+            target="$ICECREAM_TARGET_DIR/$ICECC_VERSION_ID",
+            source=[
+                "$ICECC_CREATE_ENV",
+                "$CC",
+                "$CXX"
+            ],
+            NINJA_SKIP=True
+        )[0]
+
+    # At this point, all paths above have produced a file of some sort. We now move on
+    # to producing our own signature for this local file.
+
+    targetbase_kwargs = {
+        'TARGETBASE_DIR' : '$ICECREAM_TARGET_DIR',
+        'TARGETBASE_FILE' : '$ICECC_VERSION_ID',
+        'TARGETBASE' : '$TARGETBASE_DIR/$TARGETBASE_FILE',
+    }
+
+
+    # The name of the file the user gave us is not to be trusted. Nor
+    # is the name generated by icecc-create-env. We hardlink the file
+    # that we are working with into our build directory under a stable
+    # name that we trust. If we can't hardlink we make a copy, so that
+    # we can hardlink again below without issue.
+    icecc_version_copy_or_link = env.File(env.Command(
+        target=[
+            '${TARGETBASE}.local',
+        ],
+        source=icecc_version_file,
+        action=[
+            "ln -f ${SOURCES[0]} ${TARGETS[0]} || cp -f ${SOURCES[0]} ${TARGETS[0]}",
+        ],
+
+        NINJA_SKIP=True,
+        **targetbase_kwargs,
+    ))
+
+    # There is no point caching this. If it is a hardlink, it is cheap
+    # to re-create. If it is a copy, it might be large and we don't
+    # need to put it in the cache.
+    env.NoCache(icecc_version_copy_or_link)
+
+    # Now, we compute our own signature of the local link (or copy) of
+    # the compiler package, and create yet another link to the
+    # compiler package with a name containing our computed
+    # signature. Now we know that we can give this filename to icecc
+    # and it will be assured to really reflect the contents of the
+    # package, and not the arbitrary naming of the file as found on
+    # the users filesystem or from icecc-create-env. We put the
+    # absolute path to that filename into a file that we can read
+    # from.
+    icecc_version_info = env.File(env.Command(
+        target=[
+            '${TARGETBASE}.sha256',
+            '${TARGETBASE}.sha256.path',
+        ],
+        source=icecc_version_copy_or_link,
+        action=[
+            "shasum -b -a 256 ${SOURCES[0]} | awk '{ print $1 }' > ${TARGETS[0]}",
+            "ln -f ${SOURCES[0]} ${TARGETS[0].dir}/icecream_py_csig_$$(cat ${TARGETS[0]}).tar.gz",
+            "echo ${TARGETS[0].dir.abspath}/icecream_py_csig_$$(cat ${TARGETS[0]}).tar.gz > ${TARGETS[1]}",
+        ],
+
+        NINJA_SKIP=True,
+        **targetbase_kwargs,
+    ))
+
+    # Create a value node that, when built, contains the result of
+    # reading the contents of the hashpath file. This way we can pull
+    # the value out of the file and substitute it into our wrpaper
+    # script.
+    valueBuilderEnv = env.Clone()
+    def update_value(env, target, source):
+        target[0].write(source[0].get_text_contents())
+
+    valueBuilderEnv['BUILDERS']['UpdateValue'] = SCons.Builder.Builder(action=update_value)
+    icecc_version_string_value = valueBuilderEnv.UpdateValue(
+        target=valueBuilderEnv.Value(None),
+        source=[icecc_version_info[1]],
+        NINJA_SKIP=True,
+    )[0]
+
+    def icecc_version_string_generator(source, target, env, for_signature):
+        if for_signature:
+            return icecc_version_string_value.get_csig()
+        return icecc_version_string_value.read()
+
+    # Set the values that will be interpolated into the run-icecc script.
+    env['ICECC_VERSION'] = icecc_version_string_generator
+
+    # If necessary, we include the users desired architecture in the
+    # interpolated file.
+    icecc_version_arch_string = str()
+    if "ICECC_VERSION_ARCH" in env:
+        icecc_version_arch_string = "${ICECC_VERSION_ARCH}:"
+
+    # Finally, create the run-icecc wrapper script. The contents will
+    # re-invoke icecc with our sha256 sum named file, ensuring that we
+    # trust the signature to be appropriate. In a pure SCons build, we
+    # actually wouldn't need this Substfile, we could just set
+    # env['ENV]['ICECC_VERSION'] to the Value node above. But that
+    # won't work for Ninja builds where we can't ask for the contents
+    # of such a node easily. Creating a Substfile means that SCons
+    # will take care of generating a file that Ninja can use.
+    run_icecc = env.Substfile(
+        target="$ICECREAM_TARGET_DIR/run-icecc",
+        source=[
+            # TODO: put this in the tree with the tool somehow?
+            "etc/run-icecc.in",
+        ],
+        SUBST_DICT={
+            '@icecc@' : '$ICECC',
+            '@icecc_version@' : '$ICECC_VERSION',
+            '@icecc_version_arch@' : icecc_version_arch_string,
+        },
+    )
+
+    env.AddPostAction(
+        run_icecc,
+        action=SCons.Defaults.Chmod('$TARGET', "u+x"),
+    )
+
+    env.Depends(
+        target=run_icecc,
+        dependency=[
+
+            # TODO: Without the ICECC dependency, changing ICECC doesn't cause the Substfile
+            # to regenerate. Why is this?
+            '$ICECC',
+
+            icecc_version_string_value,
+        ],
+    )
+
+    env['ICECREAM_RUN_ICECC'] = run_icecc[0]
+
+    def icecc_toolchain_dependency_emitter(target, source, env):
+        if "conftest" not in str(target[0]):
+            env.Depends(target, "$ICECREAM_RUN_ICECC")
+        return target, source
+
+    # Cribbed from Tool/cc.py and Tool/c++.py. It would be better if
+    # we could obtain this from SCons.
+    _CSuffixes = [".c"]
+    if not SCons.Util.case_sensitive_suffixes(".c", ".C"):
+        _CSuffixes.append(".C")
+
+    _CXXSuffixes = [".cpp", ".cc", ".cxx", ".c++", ".C++"]
+    if SCons.Util.case_sensitive_suffixes(".c", ".C"):
+        _CXXSuffixes.append(".C")
+
+    suffixes = _CSuffixes + _CXXSuffixes
+    for object_builder in SCons.Tool.createObjBuilders(env):
+        emitterdict = object_builder.builder.emitter
+        for suffix in emitterdict.keys():
+            if not suffix in suffixes:
+                continue
+            base = emitterdict[suffix]
+            emitterdict[suffix] = SCons.Builder.ListEmitter(
+                [base, icecc_toolchain_dependency_emitter]
+            )
 
     if env.ToolchainIs("clang"):
         env["ENV"]["ICECC_CLANG_REMOTE_CPP"] = 1
     elif env.ToolchainIs("gcc"):
-        if env["ICECREAM_VERSION"] >= _icecream_version_gcc_remote_cpp:
+        if env["ICECREAM_VERSION"] < _icecream_version_gcc_remote_cpp:
+            # We aren't going to use ICECC_REMOTE_CPP because icecc
+            # 1.1 doesn't offer it. We disallow fallback to local
+            # builds because the fallback is serial execution.
+            env["ENV"]["ICECC_CARET_WORKAROUND"] = 0
+        else:
             if ccache_enabled:
                 # Newer versions of Icecream will drop -fdirectives-only from
                 # preprocessor and compiler flags if it does not find a remote
@@ -264,17 +414,6 @@ def generate(env):
     if "ICECC_SCHEDULER" in env:
         env["ENV"]["USE_SCHEDULER"] = env["ICECC_SCHEDULER"]
 
-    # Build up the string we will set in the environment to tell icecream
-    # about the compiler package.
-    icecc_version_string = "${ICECC_VERSION.abspath}"
-    if "ICECC_VERSION_ARCH" in env:
-        icecc_version_string = "${ICECC_VERSION_ARCH}:" + icecc_version_string
-
-    # Use our BoundSubstitition class to put ICECC_VERSION into env['ENV'] with
-    # substitution in play. This avoids an early subst which can behave
-    # strangely.
-    env["ENV"]["ICECC_VERSION"] = _BoundSubstitution(env, icecc_version_string)
-
     # If ccache is in play we actually want the icecc binary in the
     # CCACHE_PREFIX environment variable, not on the command line, per
     # the ccache documentation on compiler wrappers. Otherwise, just
@@ -285,7 +424,8 @@ def generate(env):
     # compiler flags (things like -fdirectives-only), but we still try
     # to do the right thing.
     if ccache_enabled:
-        env["ENV"]["CCACHE_PREFIX"] = _BoundSubstitution(env, "$ICECC")
+        # TODO: Why does ccache need the prefix to be absolute?
+        env["ENV"]["CCACHE_PREFIX"] = _BoundSubstitution(env, "${ICECREAM_RUN_ICECC.abspath}")
     else:
         # Make a generator to expand to ICECC in the case where we are
         # not a conftest. We never want to run conftests
@@ -297,7 +437,7 @@ def generate(env):
         # it's own filtering out of conftests.
         def icecc_generator(target, source, env, for_signature):
             if "conftest" not in str(target[0]):
-                return '$ICECC'
+                return '$ICECREAM_RUN_ICECC'
             return ''
         env['ICECC_GENERATOR'] = icecc_generator
 

@@ -1,0 +1,2 @@
+#!/bin/sh
+ICECC_VERSION=@icecc_version_arch@@icecc_version@ exec @icecc@ "$@"
