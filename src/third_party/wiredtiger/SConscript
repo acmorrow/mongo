@@ -138,6 +138,16 @@ env.Install(
     ],
 )
 
+env.AutoInstall(
+    '$PREFIX_INCLUDEDIR',
+    source=[
+        'wiredtiger.h',
+        'wiredtiger_ext.h',
+    ],
+    AIB_COMPONENT='wiredtiger',
+    AIB_ROLE='dev',
+)
+
 env.Alias('generated-sources', "wiredtiger.h")
 env.Alias('generated-sources', "wiredtiger_ext.h")
 
@@ -208,6 +218,7 @@ wtlib = env.Library(
     LIBDEPS_TAGS=[
         'init-no-global-side-effects',
     ],
+    AIB_COMPONENT="wiredtiger",
 )
 
 env.Depends([cslib, wtlib], [filelistfile, version_file])
@@ -231,5 +242,8 @@ wtbin = wtbinEnv.Program(
     target="wt",
     source=Glob("src/utilities/*.c"),
     LIBDEPS=["wiredtiger"],
-    AIB_COMPONENT="dist-test",
+    AIB_COMPONENT="wiredtiger",
+    AIB_COMPONENTS_EXTRA=[
+        "dist-test",
+    ]
 )
