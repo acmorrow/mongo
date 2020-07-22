@@ -1,4 +1,5 @@
 # -*- mode: python; -*-
+import libdeps
 import re
 import textwrap
 
@@ -206,7 +207,14 @@ cslib = env.Library(
     source=cssources,
 )
 
-wtlib = env.Library(
+wtenv = env.Clone()
+if get_option('link-model') == 'dynamic-sdk':
+    wtenv['LIBDEPS_SHLIBEMITTER'] = libdeps.make_libdeps_emitter(
+        'SharedArchive',
+        libdeps.dependency_visibility_honored
+    )
+
+wtlib = wtenv.Library(
     target="wiredtiger",
     source=wtsources,
     LIBDEPS_PRIVATE=[
