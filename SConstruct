@@ -2792,6 +2792,31 @@ def doConfigure(myenv):
         if not myenv.ToolchainIs('clang', 'gcc'):
             env.FatalError('sanitize is only supported with clang or gcc')
 
+        # Some sanitizers, notably the vptr check of ubsan, can cause
+        # additional symbol dependencies to exist. Unfortunately,
+        # building with the sanitizers also requires that we not build
+        # with -z,defs, which means that we cannot make such undefined
+        # symbols errors at link time. We can however hack together
+        # something which looks for undefined typeinfo nodes in the
+        # mongo namespace using `ldd -r`.  See
+        # https://jira.mongodb.org/browse/SERVER-49798 for more
+        # details.
+        if env.TargetOSIs('posix') and not env.TargetOSIs('darwin'):
+            toolmap = { t.upper() : env.WhereIs(t) for t in ['ldd', 'grep', 'c++filt', 'false', 'true'] }
+            if all(toolmap.values()):
+                toolEnv = env.Clone()
+                for k, v in toolmap.items():
+                    toolEnv[k.replace('+', 'X')] = v
+                base_action = env['BUILDERS']['SharedLibrary'].action
+                if not isinstance(base_action, SCons.Action.ListAction):
+                    base_action = SCons.Action.ListAction([base_action])
+                base_action.list.extend([
+                    toolEnv.Action(
+                        "if $LDD -r $$TARGET | $GREP '^undefined symbol: ' | $GREP -v '__[a-z]*san' | $CXXFILT | $GREP 'mongo::' | $GREP -q 'typeinfo for' ; then $FALSE ; else $TRUE ; fi",
+                        "Examining $$TARGET for undefined typeinfo nodes" if not env.Verbose() else None
+                    )
+                ])
+
         if myenv.ToolchainIs('gcc'):
             # GCC's implementation of ASAN depends on libdl.
             env.Append(LIBS=['dl'])
