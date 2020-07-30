@@ -29,29 +29,33 @@ _xcode_setup() {
 
 case "$_Path" in
     "platform/aarch64/linux")
-        _CONFIG_OPTS="--host=aarch64-linux"
+        _CONFIG_OPTS="--target=aarch64-linux"
 	;;
     "platform/ppc64le/linux")
-        _CONFIG_OPTS="--host=ppc64le-linux"
+        _CONFIG_OPTS="--target=ppc64le-linux"
 	;;
     "platform/s390x/linux")
-        _CONFIG_OPTS="--host=s390x-linux"
+        _CONFIG_OPTS="--target=s390x-linux"
 	;;
     "platform/x86_64/freebsd")
-        _CONFIG_OPTS="--host=x86_64-freebsd"
+        _CONFIG_OPTS="--target=x86_64-freebsd"
 	;;
     "platform/x86_64/linux")
-        _CONFIG_OPTS="--host=x86_64-linux"
+        _CONFIG_OPTS="--target=x86_64-linux"
 	;;
     "platform/x86_64/openbsd")
-        _CONFIG_OPTS="--host=x86_64-openbsd"
+        _CONFIG_OPTS="--target=x86_64-openbsd"
 	;;
     "platform/x86_64/windows")
-        _CONFIG_OPTS="--host=x86_64-windows"
+        _CONFIG_OPTS="--target=x86_64-windows"
 	;;
     "platform/x86_64/macOS")
         _xcode_setup "macosx" "x86_64" "macos-version-min=10.9"
-        _CONFIG_OPTS="--host=x86_64-apple-darwin"
+        _CONFIG_OPTS="--target=x86_64-apple-darwin"
+	;;
+    "platform/aarch64/macOS")
+        _xcode_setup "macosx" "arm64" "macos-version-min=11.0"
+        _CONFIG_OPTS="--target=aarch64-apple-darwin"
 	;;
     "platform/aarch64/iOS")
         _xcode_setup "iphoneos" "arm64" "iphoneos-version-min=10.2"
@@ -59,7 +63,7 @@ case "$_Path" in
         ;;
     "platform/x86_64/iOS-sim")
         _xcode_setup "iphonesimulator" "x86_64" "iphoneos-version-min=10.2"
-        _CONFIG_OPTS="--host=x86_64-apple-darwin"
+        _CONFIG_OPTS="--target=x86_64-apple-darwin"
         ;;
     "platform/aarch64/tvOS")
         _xcode_setup "appletvos" "arm64" "tvos-version-min=10.1"
@@ -67,7 +71,7 @@ case "$_Path" in
         ;;
     "platform/x86_64/tvOS-sim")
         _xcode_setup "appletvsimulator" "x86_64" "tvos-version-min=10.1"
-        _CONFIG_OPTS="--host=x86_64-apple-darwin"
+        _CONFIG_OPTS="--target=x86_64-apple-darwin"
         ;;
     *)
         echo "Unknown configuration $_Path"
@@ -82,7 +86,7 @@ esac
 cd mozilla-release/js/src
 rm config.cache || true
 
-PYTHON=python ./configure --without-intl-api --enable-posix-nspr-emulation --disable-trace-logging --disable-js-shell --disable-tests "$_CONFIG_OPTS"
+PYTHON=python ./configure --without-intl-api --enable-posix-nspr-emulation --disable-trace-logging --disable-js-shell --disable-tests --disable-shared-js "$_CONFIG_OPTS"
 
 make recurse_export
 
