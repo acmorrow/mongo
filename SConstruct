@@ -537,6 +537,15 @@ add_option('libdeps-linting',
     type='choice',
 )
 
+add_option('experimental-visibility-support',
+    choices=['on', 'off'],
+    const='on',
+    default='off',
+    help='Enable visibility annotations (experimental)',
+    nargs='?',
+    type='choice',
+)
+
 try:
     with open("version.json", "r") as version_fp:
         version_data = json.load(version_fp)
@@ -1453,6 +1462,30 @@ env['BUILDERS']['SharedArchive'] = SCons.Builder.Builder(
 
 if link_model.startswith("dynamic"):
 
+    if link_model == "dynamic" and get_option('experimental-visibility-support') == 'on':
+        def visibility_cppdefines_generator(env, target, source, for_signature):
+            if env.get('MONGO_API_NAME'):
+                return "MONGO_API_${MONGO_API_NAME}"
+            return None
+        env['MONGO_VISIBILITY_CPPDEFINES_GENERATOR'] = visibility_cppdefines_generator
+
+        def visibility_shccflags_generator(env, target, source, for_signature):
+            if env.get('MONGO_API_NAME'):
+                return "-fvisibility=hidden"
+            return None
+        if not env.TargetOSIs('windows'):
+            env['MONGO_VISIBILITY_SHCCFLAGS_GENERATOR'] = visibility_shccflags_generator
+
+        env.AppendUnique(
+            CPPDEFINES=[
+                'MONGO_USE_VISIBILITY',
+                '$MONGO_VISIBILITY_CPPDEFINES_GENERATOR',
+            ],
+            SHCCFLAGS=[
+                '$MONGO_VISIBILITY_SHCCFLAGS_GENERATOR',
+            ]
+        )
+
     def library(env, target, source, *args, **kwargs):
         sharedLibrary = env.SharedLibrary(target, source, *args, **kwargs)
         sharedArchive = env.SharedArchive(target, source=sharedLibrary[0].sources, *args, **kwargs)
@@ -1872,6 +1905,12 @@ elif env.TargetOSIs('windows'):
         # have these, but we don't want to fix them up before we roll
         # over to C++17.
         "/wd5041",
+
+        # C4251: This warning attempts to prevent usage of CRT (C++
+        # standard library) types in DLL interfaces. That is a good
+        # idea for DLLs you ship to others, but in our case, we know
+        # that all DLLs are built consistently. Suppress the warning.
+        "/wd4251",
     ])
 
     # mozjs-60 requires the following
