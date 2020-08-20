@@ -1440,8 +1440,9 @@ if use_libunwind == True:
 
 # Windows can't currently support anything other than 'object' or 'static', until
 # we have annotated functions for export.
-if env.TargetOSIs('windows') and link_model not in ['object', 'static', 'dynamic-sdk']:
-    env.FatalError("Windows builds must use the 'object', 'dynamic-sdk', or 'static' link models")
+if env.TargetOSIs('windows') and get_option('experimental-visibility-support') != 'on':
+    if link_model not in ['object', 'static', 'dynamic-sdk']:
+        env.FatalError("Windows builds must use the 'object', 'dynamic-sdk', or 'static' link models")
 
 # The 'object' mode for libdeps is enabled by setting _LIBDEPS to $_LIBDEPS_OBJS. The other two
 # modes operate in library mode, enabled by setting _LIBDEPS to $_LIBDEPS_LIBS.
