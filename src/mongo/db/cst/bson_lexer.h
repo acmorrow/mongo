@@ -43,6 +43,13 @@ class BSONLexer {
 public:
     BSONLexer(BSONObj obj, PipelineParserGen::token_type startingToken);
     BSONLexer(std::vector<BSONElement> pipeline, PipelineParserGen::token_type startingToken);
+    /**
+     * Converts a token enum to its equivalent symbol enum. Note that this is normally not needed,
+     * however the 'api.token.raw' declarative is only available starting in bison 3.5.
+     */
+    static auto lookupTokenType(PipelineParserGen::token::yytokentype token) {
+        return PipelineParserGen::symbol_type(token, BSONLocation()).type;
+    }
 
     /**
      * Retrieves the next token in the stream.

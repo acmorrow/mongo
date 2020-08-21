@@ -131,8 +131,8 @@ const StringMap<PipelineParserGen::token_type> reservedKeyLookup = {
     {"replacement", PipelineParserGen::token::ARG_REPLACEMENT},
 };
 bool isCompound(PipelineParserGen::symbol_type token) {
-    return token.type_get() == static_cast<int>(PipelineParserGen::token::START_OBJECT) ||
-        token.type_get() == static_cast<int>(PipelineParserGen::token::START_ARRAY);
+    return token.type == BSONLexer::lookupTokenType(PipelineParserGen::token::START_OBJECT) ||
+        token.type == BSONLexer::lookupTokenType(PipelineParserGen::token::START_ARRAY);
 }
 
 }  // namespace
@@ -144,13 +144,13 @@ void BSONLexer::sortObjTokens() {
         std::pair<PipelineParserGen::symbol_type, std::vector<PipelineParserGen::symbol_type>>;
     struct TokenElementCompare {
         bool operator()(const TokenElement& elem1, const TokenElement& elem2) const {
-            return elem1.first.type_get() < elem2.first.type_get();
+            return elem1.first.type < elem2.first.type;
         }
     };
 
     auto currentPosition = _position;
-    if (_tokens[currentPosition].type_get() !=
-        static_cast<int>(PipelineParserGen::token::START_OBJECT)) {
+    if (_tokens[currentPosition].type !=
+        BSONLexer::lookupTokenType(PipelineParserGen::token::START_OBJECT)) {
         return;
     }
 
@@ -158,8 +158,8 @@ void BSONLexer::sortObjTokens() {
     // Increment to get to the first token after the START_OBJECT. We will sort tokens until the
     // matching END_OBJECT is found.
     currentPosition++;
-    while (_tokens[currentPosition].type_get() !=
-           static_cast<int>(PipelineParserGen::token::END_OBJECT)) {
+    while (_tokens[currentPosition].type !=
+           BSONLexer::lookupTokenType(PipelineParserGen::token::END_OBJECT)) {
         invariant(size_t(currentPosition) < _tokens.size());
 
         auto keyToken = _tokens[currentPosition++];
@@ -174,10 +174,10 @@ void BSONLexer::sortObjTokens() {
             while (braceCount > 0) {
                 if (isCompound(_tokens[currentPosition]))
                     braceCount++;
-                if (_tokens[currentPosition].type_get() ==
-                        static_cast<int>(PipelineParserGen::token::END_OBJECT) ||
-                    _tokens[currentPosition].type_get() ==
-                        static_cast<int>(PipelineParserGen::token::END_ARRAY))
+                if (_tokens[currentPosition].type ==
+                        BSONLexer::lookupTokenType(PipelineParserGen::token::END_OBJECT) ||
+                    _tokens[currentPosition].type ==
+                        BSONLexer::lookupTokenType(PipelineParserGen::token::END_ARRAY))
                     braceCount--;
 
                 rhsTokens.push_back(_tokens[currentPosition++]);

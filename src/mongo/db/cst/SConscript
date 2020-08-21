@@ -2,7 +2,13 @@
 
 Import('env')
 
-env = env.Clone()
+env = env.Clone(tools=["yacc"], YACC='$YACC', YACCFLAGS=['-d'])
+
+parser_gen = env.CXXFile(
+    target='pipeline_parser_gen.cpp', 
+    source='pipeline_grammar.yy',
+)
+env.Alias('generated-sources', parser_gen)
 
 env.Library(
     target='cst',

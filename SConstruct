@@ -677,6 +677,9 @@ env_vars.Add('ARFLAGS',
     help='Sets flags for the archiver',
     converter=variable_shlex_converter)
 
+env_vars.Add('YACC',
+    help='Sets the path to the bison tool for parser generation')
+
 env_vars.Add('CCACHE',
     help='Tell SCons where the ccache binary is')
 
@@ -2260,6 +2263,35 @@ def doConfigure(myenv):
         env.Append( CPPDEFINES=[("BOOST_USE_WINAPI_VERSION", "0x" + win_version_min[0])] )
         env.Append( CPPDEFINES=[("NTDDI_VERSION", "0x" + win_version_min[0] + win_version_min[1])] )
 
+    conf.Finish()
+
+    def CheckBisonMinVersion(context):
+        test_body="""
+            %require "3.3"
+            %language "c++"
+            %token plus "+"
+            %%
+            e: '+'
+            ;
+            %%
+        """
+        result = context.TryBuild(
+            builder=context.env.CXXFile,
+            text=textwrap.dedent(test_body),
+            extension='.yy'
+        )
+        context.Message('Checking for bison 3.3+... ')
+        context.Result(result)
+        return result
+    bisonEnv = env.Clone(tools=["yacc"], YACC='$YACC')
+    if 'YACC' not in bisonEnv:
+        bisonEnv.FatalError("No bison executable found, consider updating the toolchain or "
+            "installing from the appropriate package manager")
+    conf = Configure(bisonEnv, help=False, custom_tests={
+        "CheckBisonMinVersion" : CheckBisonMinVersion,
+    })
+    if not conf.CheckBisonMinVersion():
+        conf.env.ConfError("Required target version of bison 3.3 (or greater) not found")
     conf.Finish()
 
     # We require macOS 10.12 or newer

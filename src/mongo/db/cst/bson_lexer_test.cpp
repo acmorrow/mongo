@@ -43,9 +43,9 @@ namespace {
 void assertTokensMatch(BSONLexer& lexer,
                        std::vector<PipelineParserGen::token::yytokentype> tokens) {
     for (auto&& token : tokens) {
-        ASSERT_EQ(lexer.getNext().type_get(), token);
+        ASSERT_EQ(lexer.getNext().type, BSONLexer::lookupTokenType(token));
     }
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::END_OF_FILE);
+    ASSERT_EQ(lexer.getNext().type, PipelineParserGen::token::END_OF_FILE);
 }
 
 TEST(BSONLexerTest, TokenizesOpaqueUserObjects) {
@@ -98,8 +98,10 @@ TEST(BSONLexerTest, MidRuleActionToSortNestedObject) {
     auto input = fromjson("{pipeline: [{pipeline: 1.0, coll: 'test'}]}");
     BSONLexer lexer(input["pipeline"].Array(), PipelineParserGen::token::START_PIPELINE);
     // Iterate until the first object.
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_PIPELINE);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_ARRAY);
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_PIPELINE));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_ARRAY));
     // Kick the lexer to sort the object, which should move element 'coll' in front of 'pipeline'.
     // Not that this only works because these are reserved keywords recognized by the lexer,
     // arbitrary string field names with *not* get sorted.
@@ -120,10 +122,14 @@ TEST(BSONLexerTest, MidRuleActionToSortDoesNotSortNestedObjects) {
         "{pipeline: [{$unionWith: {pipeline: [{$unionWith: 'inner', a: 1.0}], coll: 'outer'}}]}");
     BSONLexer lexer(input["pipeline"].Array(), PipelineParserGen::token::START_PIPELINE);
     // Iterate until we reach the $unionWith object.
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_PIPELINE);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_ARRAY);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_OBJECT);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::STAGE_UNION_WITH);
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_PIPELINE));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_ARRAY));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_OBJECT));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::STAGE_UNION_WITH));
     lexer.sortObjTokens();
     auto expected = {
         PipelineParserGen::token::START_OBJECT,
@@ -152,10 +158,14 @@ TEST(BSONLexerTest, MultipleNestedObjectsAreReorderedCorrectly) {
         "'innerB', a: 2.0}]}}]}");
     BSONLexer lexer(input["pipeline"].Array(), PipelineParserGen::token::START_PIPELINE);
     // Iterate until we reach the $unionWith object.
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_PIPELINE);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_ARRAY);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_OBJECT);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::STAGE_UNION_WITH);
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_PIPELINE));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_ARRAY));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_OBJECT));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::STAGE_UNION_WITH));
     lexer.sortObjTokens();
     auto expected = {
         PipelineParserGen::token::START_OBJECT,
@@ -192,10 +202,14 @@ TEST(BSONLexerTest, MultiLevelBSONDoesntSortChildren) {
         " coll: 'outer'}}]}");
     BSONLexer lexer(input["pipeline"].Array(), PipelineParserGen::token::START_PIPELINE);
     // Iterate until we reach the $unionWith object.
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_PIPELINE);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_ARRAY);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::START_OBJECT);
-    ASSERT_EQ(lexer.getNext().type_get(), PipelineParserGen::token::STAGE_UNION_WITH);
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_PIPELINE));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_ARRAY));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::START_OBJECT));
+    ASSERT_EQ(lexer.getNext().type,
+              BSONLexer::lookupTokenType(PipelineParserGen::token::STAGE_UNION_WITH));
     lexer.sortObjTokens();
     auto expected = {
         PipelineParserGen::token::START_OBJECT,

@@ -32,18 +32,13 @@
 // ingested by GNU Bison (https://www.gnu.org/software/bison/) to generate native C++ parser code
 // based on the rules provided here.
 // 
-// To manually generate the parser files, run 
-// 'bison pipeline_grammar.yy -o pipeline_parser_gen.cpp'.
-// 
-%require "3.5"
+%require "3.3"
 %language "c++"
 
 // Generate header for tokens to be included from lexer.
 %defines
 // Tell Bison to generate make_* methods for tokens.
 %define api.token.constructor
-// The mapping of scanner token ID to Bison's internal symbol enum is consistent.
-%define api.token.raw
 // Instead of specifying a %union directive of possible semantic types, allow Bison to build a sort
 // of std::variant structure. This allows symbol declaration with '%type <C++ type> symbol'.
 %define api.value.type variant
