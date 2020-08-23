@@ -261,7 +261,6 @@ baseEnv.Library(
         '$BUILD_DIR/third_party/shim_pcrecpp',
         '$BUILD_DIR/third_party/shim_unwind' if use_libunwind else [],
         'util/boost_assert_shim',
-        'stdx/stdx',
     ],
     AIB_COMPONENT='platform',
 )

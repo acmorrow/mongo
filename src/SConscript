@@ -3,12 +3,63 @@
 # This is the principle SConscript file, invoked by the SConstruct.  Its job is
 # to delegate to any and all per-module SConscript files.
 
-Import('env')
-Import('module_sconscripts')
+import SCons
+
+Import([
+    'dynamicCRT',
+    'env',
+    'module_sconscripts',
+])
+
+
+env = env.Clone()
+
+if not env.ToolchainIs('msvc') and dynamicCRT == "off":
+
+    #env.AppendUnique(
+    #    LINKFLAGS_NO_STDLIB="-nostdlib",
+    #    LINKFLAGS="$LINKFLAGS_NO_STDLIB",
+    #
+    #    LIBS_NO_STDLIB=['gcc', 'gcc_eh', 'm', 'c'],
+    #    LIBS="$LIBS_NO_STDLIB",
+    #)
+
+    for builder_name in ('Program', 'SharedLibrary', 'LoadableModule', 'StaticLibrary'):
+        builder = env['BUILDERS'][builder_name]
+        base_emitter = builder.emitter
+
+        def add_libstdx_hack(target, source, env):
+
+            # If we allowed conftests to become dependent, any TryLink
+            # that happened after we made the below modifications would
+            # cause the configure steps to try to compile tcmalloc and any
+            # of its dependencies. Oops!
+            if any('conftest' in str(t) for t in target):
+                return target, source
+
+            # It is possible that 'env' isn't a unique
+            # OverrideEnvironment, since if you didn't pass any kw args
+            # into your builder call, you just reuse the env you were
+            # called with. That could mean that we see the same
+            # environment here multiple times. But that is really OK,
+            # since the operation we are performing would be performed on
+            # all of them anyway. The flag serves as a way to disable the
+            # auto-injection for the handful of libraries where we must do
+            # so to avoid forming a cycle.
+            if not env.get('DISABLE_STDX_INJECTION', False):
+                lds = env.get('LIBDEPS', [])
+                libstdx = '$BUILD_DIR/mongo/stdx/stdx'
+                if libstdx not in lds:
+                    lds.append(libstdx)
+                    env['LIBDEPS'] = lds
+
+            return target, source
+
+        builder.emitter = SCons.Builder.ListEmitter([add_libstdx_hack, base_emitter])
 
 # NOTE: We must do third_party first as it adds methods to the environment
 # that we need in the mongo sconscript
-env = env.Clone()
+
 env.SConscript('third_party/SConscript', exports=['env'])
 
 # Inject common dependencies from third_party globally for all core mongo code

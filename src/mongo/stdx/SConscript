@@ -14,16 +14,73 @@ env.Benchmark(
     ],
 )
 
-env.Library(
+
+stdxEnv = env.Clone()
+
+stdxEnv.AppendUnique(
+    LINKFLAGS=[
+        # If we have -static-libstdc++ on the link line, then we want
+        # to injest the entire C++ runtime library into libstdx, not
+        # just referenced symbols. If we don't have it. then having
+        # this won't have any effect.
+        # '$LINK_WHOLE_ARCHIVE_LIB_START',
+
+        # For whatever reason, '-lgcc -lgcc_eh' appears multiple times
+        # on the link line when building with --static-libgcc. Without
+        # this, we would get duplicate symbol errors because of that,
+        # since we are pulling in the whole library unconditionally.
+        "-Wl,-z,muldefs",
+
+        "-static-libstdc++",
+
+        "-static-libgcc",
+
+        '-Wl,--push-state',
+
+        '-Wl,--whole-archive',
+
+        '-Wl,-Bstatic',
+
+        '-lstdc++',
+
+        '-lgcc',
+
+        '-lgcc_eh',
+
+        '-Wl,--pop-state',
+    ],
+)
+
+stdxEnv.Library(
     target='stdx',
     source=[
         'set_terminate_internals.cpp',
     ],
-    LIBDEPS=[
-        # Ideally, there should be no linking dependencies upon any other libraries, for `libstdx`.
-        # This library is a shim filling in for deficiencies in various standard library
-        # implementations.  There should never be any link-time dependencies into mongo internals.
+
+    # This shouldn't be necessary when we disallow mixing LIBS and LIBDEPS.
+    LIBS=[
     ],
+
+    LIBDEPS_TAGS=[
+        # There should be no linking dependencies upon any other
+        # libraries, for `libstdx`.  This library is a shim filling in
+        # for deficiencies in various standard library
+        # implementations.  There should never be any link-time
+        # dependencies into mongo internals.
+        'lint-leaf-node-no-deps',
+
+        # Other libraries that are tagged as not being allowed to have
+        # dependencies may in fact get this one.
+        'lint-leaf-node-allowed-dep',
+    ],
+
+    # We need this to be injected behind the allocator, not the other
+    # way around, so we need to disable the allocator injection or we
+    # would have a circular dependency.
+    DISABLE_ALLOCATOR_SHIM_INJECTION=True,
+
+    # Similarly, we can't depend on ourselves.
+    DISABLE_STDX_INJECTION=True,
 )
 
 env.CppUnitTest(
