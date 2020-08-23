@@ -1606,11 +1606,11 @@ else:
                 # This tells the compiler to wrap -lstdc++ in -Bstatic
                 # -Bdynamic, so that we pull in the static C++ runtime
                 # library.
-                # "-static-libstdc++",
+                "-static-libstdc++",
 
                 # This tells the compiler to link to libgcc and
                 # libgcc_eh, rather than libgcc_s.
-                # "-static-libgcc",
+                "-static-libgcc",
             ],
         )
 
