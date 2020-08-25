@@ -2265,35 +2265,6 @@ def doConfigure(myenv):
 
     conf.Finish()
 
-    def CheckBisonMinVersion(context):
-        test_body="""
-            %require "3.3"
-            %language "c++"
-            %token plus "+"
-            %%
-            e: '+'
-            ;
-            %%
-        """
-        result = context.TryBuild(
-            builder=context.env.CXXFile,
-            text=textwrap.dedent(test_body),
-            extension='.yy'
-        )
-        context.Message('Checking for bison 3.3+... ')
-        context.Result(result)
-        return result
-    bisonEnv = env.Clone(tools=["yacc"], YACC='$YACC')
-    if 'YACC' not in bisonEnv:
-        bisonEnv.FatalError("No bison executable found, consider updating the toolchain or "
-            "installing from the appropriate package manager")
-    conf = Configure(bisonEnv, help=False, custom_tests={
-        "CheckBisonMinVersion" : CheckBisonMinVersion,
-    })
-    if not conf.CheckBisonMinVersion():
-        conf.env.ConfError("Required target version of bison 3.3 (or greater) not found")
-    conf.Finish()
-
     # We require macOS 10.12 or newer
     if env.TargetOSIs('darwin'):
 

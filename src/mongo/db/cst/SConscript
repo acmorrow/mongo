@@ -1,11 +1,72 @@
 # -*- mode: python -*-
 
+import textwrap
+
 Import('env')
 
-env = env.Clone(tools=["yacc"], YACC='$YACC', YACCFLAGS=['-d'])
+env = env.Clone()
 
-parser_gen = env.CXXFile(
-    target='pipeline_parser_gen.cpp', 
+# Protect against `scons YACC= target`, which would result in the tool
+# leaving the YACC variable empty.
+if 'YACC' in env and not env.get('YACC'):
+    env.FatalError("The YACC variable must either be unset or set to a non-empty value.")
+
+# Explicitly load the tool without an environment so we can force it
+# to run its `exists` method. We want this so that it will search
+# special paths for us if the user hasn't customized YACC.
+yaccTool = Tool('yacc')
+yaccEnv = env.Clone()
+if not yaccTool.exists(yaccEnv):
+    yaccEnv.FatalError("The SCons yacc tool was unable to detect any candidate tool binaries")
+yaccTool.generate(yaccEnv)
+
+# If after all the above, we still don't have a YACC, we must give up.
+if 'YACC' not in yaccEnv:
+    yaccEnv.FatalError("No bison executable found, consider updating the toolchain or "
+        "installing from the appropriate package manager")
+
+
+def CheckBisonMinVersion(context):
+    test_body="""
+        %require "3.3"
+        %language "c++"
+        %token plus "+"
+        %%
+        e: '+'
+        ;
+        %%
+    """
+    context.Message('Checking for bison 3.3+... ')
+
+    result, _ = context.TryAction(
+        action=yaccTool._tool_module().YaccAction,
+        text=textwrap.dedent(test_body),
+        extension='.yy'
+    )
+
+    context.Result(result)
+    return result
+
+# Validate that the yacc tool that we found is at least bison 3.3:
+conf = Configure(yaccEnv, help=False, custom_tests={
+    "CheckBisonMinVersion" : CheckBisonMinVersion,
+})
+
+if not conf.CheckBisonMinVersion():
+    conf.env.ConfError("Required target version of bison 3.3 (or greater) not found")
+conf.Finish()
+
+# We need -d in the YACCFLAGS so that the yacc tool emitter will add
+# the generated header.
+yaccEnv.AppendUnique(
+    YACCFLAGS=[
+        '-d',
+    ]
+)
+
+# Phew. Finally we can run some bison!
+parser_gen = yaccEnv.CXXFile(
+    target='pipeline_parser_gen.cpp',
     source='pipeline_grammar.yy',
 )
 env.Alias('generated-sources', parser_gen)
@@ -14,10 +75,10 @@ env.Library(
     target='cst',
     source=[
         'bson_lexer.cpp',
-        'cst_pipeline_translation.cpp',
         'c_node.cpp',
         'c_node_validation.cpp',
-        'pipeline_parser_gen.cpp',
+        'cst_pipeline_translation.cpp',
+        parser_gen[0],
     ],
     LIBDEPS=[
         "$BUILD_DIR/mongo/base",
