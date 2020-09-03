@@ -60,6 +60,9 @@ def build_benchmark(env, target, source, **kwargs):
 
     kwargs["AIB_COMPONENTS_EXTRA"] = list(benchmark_test_components)
 
+    # TODO: Should benchmarks be decidable or not?
+    # kwargs['UNDECIDABLE_TEST'] = True
+
     result = bmEnv.Program(target, source, **kwargs)
     bmEnv.RegisterTest("$BENCHMARK_LIST", result[0])
     bmEnv.Alias("$BENCHMARK_ALIAS", result)
