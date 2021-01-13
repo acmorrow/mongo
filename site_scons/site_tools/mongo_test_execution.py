@@ -62,7 +62,6 @@ def generate_test_execution_aliases(env, test):
         NINJA_POOL="console",
     )
     env.Pseudo(target_command)
-    env.AlwaysBuild(target_command)
     env.Alias("test-execution-aliases", target_command)
 
     for source in test.sources:
@@ -85,7 +84,6 @@ def generate_test_execution_aliases(env, test):
             NINJA_POOL="console",
         )
         env.Pseudo(source_command)
-        env.AlwaysBuild(source_command)
         env.Alias('test-execution-aliases', source_command)
 
     proof_generator_command = env.Command(
@@ -109,17 +107,21 @@ def generate_test_execution_aliases(env, test):
         env.NoCache(proof_generator_command)
         env.AlwaysBuild(proof_generator_command)
 
-    proof_command = env.Command(
-        target=f"#prove-{target_name}",
+    proof_analyzer_command = env.Command(
+        target='${SOURCES[1].base}.proof',
         source=proof_generator_command,
         action=SCons.Action.Action(
             "$PROOF_ANALYZER_COMMAND",
             "$PROOF_ANALYZER_COMSTR"
         )
     )
-    env.Pseudo(proof_command)
-    env.AlwaysBuild(proof_command)
-    setattr(installed[0].attributes, _associated_proof, proof_command)
+
+    proof_analyzer_alias = env.Alias(
+        f"prove-{target_name}",
+        proof_analyzer_command,
+    )
+
+    setattr(installed[0].attributes, _associated_proof, proof_analyzer_alias)
 
     # TODO: Should we enable proof at the file level?
 
@@ -147,10 +149,11 @@ def generate(env):
 
     if env['PLATFORM'] == 'win32':
         env["PROOF_GENERATOR_COMMAND"] = "$( $ICERUN $) ${SOURCES[0]} $UNITTEST_FLAGS > ${TARGETS[0]} 2>&1 & call echo %^errorlevel% > ${TARGETS[1]}"
-        env["PROOF_ANALYZER_COMMAND"] = "set /p nextErrorLevel=<${SOURCES[1]} & call exit %^nextErrorLevel%"
+        # env["PROOF_ANALYZER_COMMAND"] = "set /p nextErrorLevel=<${SOURCES[1]} & call exit %^nextErrorLevel%"
+        env["PROOF_ANALYZER_COMMAND"] = "set /p nextErrorLevel=<${SOURCES[1]} & if %nextErrorLevel%==0 (type nul > $TARGET) else (exit 1)"
     else:
         env["PROOF_GENERATOR_COMMAND"] = "$( $ICERUN $) ${SOURCES[0]} $UNITTEST_FLAGS > ${TARGETS[0]} 2>&1 ; echo $? > ${TARGETS[1]}"
-        env["PROOF_ANALYZER_COMMAND"] = "exit $$(cat ${SOURCES[1]})"
+        env["PROOF_ANALYZER_COMMAND"] = "if $$(exit $$(cat ${SOURCES[1]})) ; then touch $TARGET ; else exit 1 ; fi"
 
     # TODO: Condition this on verbosity
     env['PROOF_GENERATOR_COMSTR'] = "Running test ${SOURCES[0]}"
