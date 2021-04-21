@@ -19,12 +19,14 @@ env.Library(
         'zstd/lib/common/threading.c',
         'zstd/lib/common/xxhash.c',
         'zstd/lib/common/zstd_common.c',
+        'zstd/lib/common/zstd_trace.c',
         'zstd/lib/compress/fse_compress.c',
         'zstd/lib/compress/hist.c',
         'zstd/lib/compress/huf_compress.c',
         'zstd/lib/compress/zstd_compress.c',
         'zstd/lib/compress/zstd_compress_literals.c',
         'zstd/lib/compress/zstd_compress_sequences.c',
+        'zstd/lib/compress/zstd_compress_superblock.c',
         'zstd/lib/compress/zstd_double_fast.c',
         'zstd/lib/compress/zstd_fast.c',
         'zstd/lib/compress/zstd_lazy.c',
@@ -42,7 +44,6 @@ env.Library(
         'zstd/lib/dictBuilder/divsufsort.c',
         'zstd/lib/dictBuilder/fastcover.c',
         'zstd/lib/dictBuilder/zdict.c',
-        
     ],
     LIBDEPS_TAGS=[
         'init-no-global-side-effects',
