@@ -1,11 +1,15 @@
 # ################################################################
-# Copyright (c) 2015-present, Yann Collet, Facebook, Inc.
+# Copyright (c) 2015-2021, Yann Collet, Facebook, Inc.
 # All rights reserved.
 #
 # This source code is licensed under both the BSD-style license (found in the
 # LICENSE file in the root directory of this source tree) and the GPLv2 (found
 # in the COPYING file in the root directory of this source tree).
+# You may select, at your option, one of the above-listed licenses.
 # ################################################################
+
+# verbose mode (print commands) on V=1 or VERBOSE=1
+Q = $(if $(filter 1,$(V) $(VERBOSE)),,@)
 
 PRGDIR   = programs
 ZSTDDIR  = lib
@@ -17,10 +21,19 @@ FUZZDIR  = $(TESTDIR)/fuzz
 # Define nul output
 VOID = /dev/null
 
-ifneq (,$(filter Windows%,$(OS)))
-EXT =.exe
+# When cross-compiling from linux to windows, you might
+# need to specify this as "Windows." Fedora build fails
+# without it.
+#
+# Note: mingw-w64 build from linux to windows does not
+# fail on other tested distros (ubuntu, debian) even
+# without manually specifying the TARGET_SYSTEM.
+TARGET_SYSTEM ?= $(OS)
+
+ifneq (,$(filter Windows%,$(TARGET_SYSTEM)))
+  EXT =.exe
 else
-EXT =
+  EXT =
 endif
 
 ## default: Build lib-release and zstd-release
@@ -36,27 +49,27 @@ allmost: allzstd zlibwrapper
 # skip zwrapper, can't build that on alternate architectures without the proper zlib installed
 .PHONY: allzstd
 allzstd: lib
-	$(MAKE) -C $(PRGDIR) all
-	$(MAKE) -C $(TESTDIR) all
+	$(Q)$(MAKE) -C $(PRGDIR) all
+	$(Q)$(MAKE) -C $(TESTDIR) all
 
 .PHONY: all32
 all32:
 	$(MAKE) -C $(PRGDIR) zstd32
 	$(MAKE) -C $(TESTDIR) all32
 
-.PHONY: lib lib-release libzstd.a
+.PHONY: lib lib-release
 lib lib-release :
-	@$(MAKE) -C $(ZSTDDIR) $@
+	$(Q)$(MAKE) -C $(ZSTDDIR) $@
 
 .PHONY: zstd zstd-release
 zstd zstd-release:
-	@$(MAKE) -C $(PRGDIR) $@
-	cp $(PRGDIR)/zstd$(EXT) .
+	$(Q)$(MAKE) -C $(PRGDIR) $@
+	$(Q)ln -sf $(PRGDIR)/zstd$(EXT) zstd$(EXT)
 
 .PHONY: zstdmt
 zstdmt:
-	@$(MAKE) -C $(PRGDIR) $@
-	cp $(PRGDIR)/zstd$(EXT) ./zstdmt$(EXT)
+	$(Q)$(MAKE) -C $(PRGDIR) $@
+	$(Q)cp $(PRGDIR)/zstd$(EXT) ./zstdmt$(EXT)
 
 .PHONY: zlibwrapper
 zlibwrapper: lib
@@ -65,25 +78,32 @@ zlibwrapper: lib
 ## test: run long-duration tests
 .PHONY: test
 DEBUGLEVEL ?= 1
-test: MOREFLAGS += -g -DDEBUGLEVEL=$(DEBUGLEVEL) -Werror
+test: MOREFLAGS += -g -Werror
 test:
-	MOREFLAGS="$(MOREFLAGS)" $(MAKE) -j -C $(PRGDIR) allVariants
+	DEBUGLEVEL=$(DEBUGLEVEL) MOREFLAGS="$(MOREFLAGS)" $(MAKE) -j -C $(PRGDIR) allVariants
 	$(MAKE) -C $(TESTDIR) $@
-	ZSTD=../../programs/zstd $(MAKE) -C doc/educational_decoder test
+	ZSTD=../../programs/zstd $(MAKE) -C doc/educational_decoder $@
 
 ## shortest: same as `make check`
 .PHONY: shortest
 shortest:
-	$(MAKE) -C $(TESTDIR) $@
+	$(Q)$(MAKE) -C $(TESTDIR) $@
 
 ## check: run basic tests for `zstd` cli
 .PHONY: check
 check: shortest
 
-## examples: build all examples in `/examples` directory
+.PHONY: automated_benchmarking
+automated_benchmarking:
+	$(MAKE) -C $(TESTDIR) $@
+
+.PHONY: benchmarking
+benchmarking: automated_benchmarking
+
+## examples: build all examples in `examples/` directory
 .PHONY: examples
 examples: lib
-	CPPFLAGS=-I../lib LDFLAGS=-L../lib $(MAKE) -C examples/ all
+	$(MAKE) -C examples all
 
 ## manual: generate API documentation in html format
 .PHONY: manual
@@ -100,8 +120,10 @@ man:
 contrib: lib
 	$(MAKE) -C contrib/pzstd all
 	$(MAKE) -C contrib/seekable_format/examples all
+	$(MAKE) -C contrib/seekable_format/tests test
 	$(MAKE) -C contrib/largeNbDicts all
-	cd contrib/single_file_decoder/ ; ./build_test.sh
+	cd contrib/single_file_libs/ ; ./build_decoder_test.sh
+	cd contrib/single_file_libs/ ; ./build_library_test.sh
 
 .PHONY: cleanTabs
 cleanTabs:
@@ -109,17 +131,18 @@ cleanTabs:
 
 .PHONY: clean
 clean:
-	@$(MAKE) -C $(ZSTDDIR) $@ > $(VOID)
-	@$(MAKE) -C $(PRGDIR) $@ > $(VOID)
-	@$(MAKE) -C $(TESTDIR) $@ > $(VOID)
-	@$(MAKE) -C $(ZWRAPDIR) $@ > $(VOID)
-	@$(MAKE) -C examples/ $@ > $(VOID)
-	@$(MAKE) -C contrib/gen_html $@ > $(VOID)
-	@$(MAKE) -C contrib/pzstd $@ > $(VOID)
-	@$(MAKE) -C contrib/seekable_format/examples $@ > $(VOID)
-	@$(MAKE) -C contrib/largeNbDicts $@ > $(VOID)
-	@$(RM) zstd$(EXT) zstdmt$(EXT) tmp*
-	@$(RM) -r lz4
+	$(Q)$(MAKE) -C $(ZSTDDIR) $@ > $(VOID)
+	$(Q)$(MAKE) -C $(PRGDIR) $@ > $(VOID)
+	$(Q)$(MAKE) -C $(TESTDIR) $@ > $(VOID)
+	$(Q)$(MAKE) -C $(ZWRAPDIR) $@ > $(VOID)
+	$(Q)$(MAKE) -C examples/ $@ > $(VOID)
+	$(Q)$(MAKE) -C contrib/gen_html $@ > $(VOID)
+	$(Q)$(MAKE) -C contrib/pzstd $@ > $(VOID)
+	$(Q)$(MAKE) -C contrib/seekable_format/examples $@ > $(VOID)
+	$(Q)$(MAKE) -C contrib/seekable_format/tests $@ > $(VOID)
+	$(Q)$(MAKE) -C contrib/largeNbDicts $@ > $(VOID)
+	$(Q)$(RM) zstd$(EXT) zstdmt$(EXT) tmp*
+	$(Q)$(RM) -r lz4
 	@echo Cleaning completed
 
 #------------------------------------------------------------------------------
@@ -143,7 +166,7 @@ EGREP = egrep $(EGREP_OPTIONS)
 ## list: Print all targets and their descriptions (if provided)
 .PHONY: list
 list:
-	@TARGETS=$$($(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+	$(Q)TARGETS=$$($(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
 		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 		| $(EGREP) -v  -e '^[^[:alnum:]]' | sort); \
 	{ \
@@ -158,13 +181,13 @@ list:
 
 .PHONY: install armtest usan asan uasan
 install:
-	@$(MAKE) -C $(ZSTDDIR) $@
-	@$(MAKE) -C $(PRGDIR) $@
+	$(Q)$(MAKE) -C $(ZSTDDIR) $@
+	$(Q)$(MAKE) -C $(PRGDIR) $@
 
 .PHONY: uninstall
 uninstall:
-	@$(MAKE) -C $(ZSTDDIR) $@
-	@$(MAKE) -C $(PRGDIR) $@
+	$(Q)$(MAKE) -C $(ZSTDDIR) $@
+	$(Q)$(MAKE) -C $(PRGDIR) $@
 
 .PHONY: travis-install
 travis-install:
@@ -201,10 +224,10 @@ aarch64build: clean
 	CC=aarch64-linux-gnu-gcc CFLAGS="-Werror" $(MAKE) allzstd
 
 ppcbuild: clean
-	CC=powerpc-linux-gnu-gcc CFLAGS="-m32 -Wno-attributes -Werror" $(MAKE) allzstd
+	CC=powerpc-linux-gnu-gcc CFLAGS="-m32 -Wno-attributes -Werror" $(MAKE) -j allzstd
 
 ppc64build: clean
-	CC=powerpc-linux-gnu-gcc CFLAGS="-m64 -Werror" $(MAKE) allzstd
+	CC=powerpc-linux-gnu-gcc CFLAGS="-m64 -Werror" $(MAKE) -j allzstd
 
 armfuzz: clean
 	CC=arm-linux-gnueabi-gcc QEMU_SYS=qemu-arm-static MOREFLAGS="-static" FUZZER_FLAGS=--no-big-tests $(MAKE) -C $(TESTDIR) fuzztest
@@ -263,12 +286,11 @@ uasanregressiontest:
 msanregressiontest:
 	$(MAKE) -C $(FUZZDIR) regressiontest CC=clang CXX=clang++ CFLAGS="-O3 -fsanitize=memory" CXXFLAGS="-O3 -fsanitize=memory"
 
-# run UBsan with -fsanitize-recover=signed-integer-overflow
-# due to a bug in UBsan when doing pointer subtraction
-# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63303
+# run UBsan with -fsanitize-recover=pointer-overflow
+# this only works with recent compilers such as gcc 8+
 
 usan: clean
-	$(MAKE) test CC=clang MOREFLAGS="-g -fno-sanitize-recover=all -fsanitize-recover=signed-integer-overflow -fsanitize=undefined -Werror"
+	$(MAKE) test CC=clang MOREFLAGS="-g -fno-sanitize-recover=all -fsanitize-recover=pointer-overflow -fsanitize=undefined -Werror"
 
 asan: clean
 	$(MAKE) test CC=clang MOREFLAGS="-g -fsanitize=address -Werror"
@@ -286,10 +308,10 @@ asan32: clean
 	$(MAKE) -C $(TESTDIR) test32 CC=clang MOREFLAGS="-g -fsanitize=address"
 
 uasan: clean
-	$(MAKE) test CC=clang MOREFLAGS="-g -fno-sanitize-recover=all -fsanitize-recover=signed-integer-overflow -fsanitize=address,undefined -Werror"
+	$(MAKE) test CC=clang MOREFLAGS="-g -fno-sanitize-recover=all -fsanitize-recover=pointer-overflow -fsanitize=address,undefined -Werror"
 
 uasan-%: clean
-	LDFLAGS=-fuse-ld=gold MOREFLAGS="-g -fno-sanitize-recover=all -fsanitize-recover=signed-integer-overflow -fsanitize=address,undefined -Werror" $(MAKE) -C $(TESTDIR) $*
+	LDFLAGS=-fuse-ld=gold MOREFLAGS="-g -fno-sanitize-recover=all -fsanitize-recover=pointer-overflow -fsanitize=address,undefined -Werror" $(MAKE) -C $(TESTDIR) $*
 
 tsan-%: clean
 	LDFLAGS=-fuse-ld=gold MOREFLAGS="-g -fno-sanitize-recover=all -fsanitize=thread -Werror" $(MAKE) -C $(TESTDIR) $* FUZZER_FLAGS=--no-big-tests
@@ -337,7 +359,7 @@ endif
 
 ifneq (,$(filter MSYS%,$(shell uname)))
 HOST_OS = MSYS
-CMAKE_PARAMS = -G"MSYS Makefiles" -DZSTD_MULTITHREAD_SUPPORT:BOOL=OFF -DZSTD_BUILD_STATIC:BOOL=ON -DZSTD_BUILD_TESTS:BOOL=ON
+CMAKE_PARAMS = -G"MSYS Makefiles" -DCMAKE_BUILD_TYPE=Debug -DZSTD_MULTITHREAD_SUPPORT:BOOL=OFF -DZSTD_BUILD_STATIC:BOOL=ON -DZSTD_BUILD_TESTS:BOOL=ON
 endif
 
 
@@ -349,11 +371,15 @@ cmakebuild:
 	cmake --version
 	$(RM) -r $(BUILDIR)/cmake/build
 	mkdir $(BUILDIR)/cmake/build
-	cd $(BUILDIR)/cmake/build ; cmake -DCMAKE_INSTALL_PREFIX:PATH=~/install_test_dir $(CMAKE_PARAMS) .. ; $(MAKE) install ; $(MAKE) uninstall
+	cd $(BUILDIR)/cmake/build; cmake -DCMAKE_INSTALL_PREFIX:PATH=~/install_test_dir $(CMAKE_PARAMS) ..
+	$(MAKE) -C $(BUILDIR)/cmake/build -j4;
+	$(MAKE) -C $(BUILDIR)/cmake/build install;
+	$(MAKE) -C $(BUILDIR)/cmake/build uninstall;
+	cd $(BUILDIR)/cmake/build; ctest -V -L Medium
 
-c90build: clean
+c89build: clean
 	$(CC) -v
-	CFLAGS="-std=c90 -Werror" $(MAKE) allmost  # will fail, due to missing support for `long long`
+	CFLAGS="-std=c89 -Werror" $(MAKE) allmost  # will fail, due to missing support for `long long`
 
 gnu90build: clean
 	$(CC) -v
