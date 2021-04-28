@@ -4,13 +4,20 @@ Import("env")
 
 env = env.Clone()
 
-# GCC emits a warning on both v2 and v3 toolchains when compiling filesystem. 
-# We should check if this is still needed when doing boost upgrades in the future.
-if env.ToolchainIs('GCC'):
-    env.AppendUnique(CXXFLAGS=['-Wno-overloaded-virtual'])
+env.AppendUnique(
+    # GCC emits a warning on both v2 and v3 toolchains when
+    # compiling filesystem. We should check if this is still
+    # needed when doing boost upgrades in the future.
+    CXXFLAGS=['-Wno-overloaded-virtual'] if env.ToolchainIs('GCC') else [],
+
+    # Some internal boost files emit a pragma message if we don't add
+    # this GLOBAL_PLACEHOLDERS definition. We don't care about usages
+    # internal to boost.
+    CPPDEFINES=['BOOST_BIND_GLOBAL_PLACEHOLDERS'],
+)
 
 env.Library(
-    target='boost_system', 
+    target='boost_system',
     source=[
         'libs/system/src/error_code.cpp',
     ],
@@ -20,9 +27,11 @@ env.Library(
 )
 
 env.Library(
-    target='boost_filesystem', 
+    target='boost_filesystem',
     source=[
         'libs/filesystem/src/codecvt_error_category.cpp',
+        'libs/filesystem/src/directory.cpp',
+        'libs/filesystem/src/exception.cpp',
         'libs/filesystem/src/operations.cpp',
         'libs/filesystem/src/path.cpp',
         'libs/filesystem/src/path_traits.cpp',
@@ -38,7 +47,7 @@ env.Library(
 )
 
 env.Library(
-    target='boost_program_options', 
+    target='boost_program_options',
     source=[
         'libs/program_options/src/cmdline.cpp',
         'libs/program_options/src/config_file.cpp',
