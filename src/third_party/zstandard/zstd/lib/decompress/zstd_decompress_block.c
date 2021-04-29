@@ -1188,7 +1188,6 @@ ZSTD_decompressSequences_body( ZSTD_DCtx* dctx,
 #endif
             DEBUGLOG(6, "regenerated sequence size : %u", (U32)oneSeqSize);
             BIT_reloadDStream(&(seqState.DStream));
-            op += oneSeqSize;
             /* gcc and clang both don't like early returns in this loop.
              * Instead break and check for an error at the end of the loop.
              */
@@ -1196,6 +1195,8 @@ ZSTD_decompressSequences_body( ZSTD_DCtx* dctx,
                 error = oneSeqSize;
                 break;
             }
+            op += oneSeqSize;
+
             if (UNLIKELY(!--nbSeq)) break;
         }
 
