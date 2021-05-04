@@ -35,7 +35,7 @@ def _cppForceIncludesGenerator(target, source, env, for_signature):
     if for_signature:
         return [f.get_csig() for f in forceincludesfiles]
 
-    return forceincludes
+    return ' '.join([f'${{CPPFORCEINCLUDEPREFIX}}{fi}${{CPPFORCEINCLUDESUFFIX}}' for fi in forceincludes])
 
 def generate(env, **kwargs):
     if not 'CPPFORCEINCLUDEPREFIX' in env:
@@ -51,7 +51,7 @@ def generate(env, **kwargs):
     env['_CPPFORCEINCLUDESGENLIST'] = ['$_CPPFORCEINCLUDESGEN']
 
     env.Append(
-        _CPPINCFLAGS='$( ${_concat(CPPFORCEINCLUDEPREFIX, _CPPFORCEINCLUDESGENLIST, CPPFORCEINCLUDESUFFIX, __env__, lambda x: x, TARGET, SOURCE)} $) '
+        _CPPINCFLAGS='$_CPPFORCEINCLUDESGEN'
     )
 
 def exists(env):
