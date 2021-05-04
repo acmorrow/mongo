@@ -9,6 +9,9 @@ Import("get_option")
 
 env = env.Clone()
 
+# Cannot do PCH for C just yet
+env['PCH'] = None
+
 files = [
     "LIBRARY/float128/dpml_exception.c",
     "LIBRARY/float128/dpml_four_over_pi.c",

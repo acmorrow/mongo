@@ -38,7 +38,7 @@ def generate_test_execution_aliases(env, test):
     )
 
     env.Alias("test-execution-aliases", command)
-    for source in test.sources:
+    for source in []: #test.sources:
         source_base_name = os.path.basename(source.get_path())
         # Strip suffix
         dot_idx = source_base_name.rfind(".")

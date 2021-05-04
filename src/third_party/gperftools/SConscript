@@ -11,6 +11,9 @@ env = env.Clone(
     DISALLOW_VISHIDDEN=True,
 )
 
+# Unfortunately, gperftools contains a mix of C and C++, so we can't use PCH here.
+env['PCH'] = None
+
 if use_libunwind:
     env.Append(
         CPPDEFINES=[

@@ -2256,6 +2256,7 @@ elif env.TargetOSIs('windows'):
         "_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING",
         "_SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING",
         "_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING",
+        "_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING",
     ])
 
     # /EHsc exception handling style for visual studio
@@ -2347,7 +2348,14 @@ elif env.TargetOSIs('windows'):
     #     object called lock on the stack.
     env.Append( CCFLAGS=["/we4013", "/we4099", "/we4930"] )
 
-    env.Append( CPPDEFINES=["_CONSOLE","_CRT_SECURE_NO_WARNINGS", "_SCL_SECURE_NO_WARNINGS"] )
+    env.Append(
+        CPPDEFINES=[
+            "_CONSOLE",
+            "_CRT_NONSTDC_NO_WARNINGS",
+            "_CRT_SECURE_NO_WARNINGS",
+            "_SCL_SECURE_NO_WARNINGS",
+        ]
+    )
 
     # this would be for pre-compiled headers, could play with it later
     #env.Append( CCFLAGS=['/Yu"pch.h"'] )

@@ -4,6 +4,9 @@ Import("env")
 
 env = env.Clone()
 
+# Cannot do PCH for C just yet
+env['PCH'] = None
+
 env.Append( CPPDEFINES=[ "HAVE_CONFIG_H",  ] )
 
 env['CCFLAGS_WERROR'] = []

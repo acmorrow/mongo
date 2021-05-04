@@ -24,6 +24,10 @@ env.Append(LIBS=[
     ]
 )
 
+# These are likely to be actively harmful.
+env['PCH'] = None
+env['PCHSTOP'] = None
+
 ca = env.SharedLibrary(
     target='mongoca',
     source=[
