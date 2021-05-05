@@ -20,8 +20,6 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-import sys
-
 import SCons
 
 def _cppForceIncludesGenerator(target, source, env, for_signature):
@@ -29,13 +27,13 @@ def _cppForceIncludesGenerator(target, source, env, for_signature):
     if not forceincludes:
         return []
 
-    search_paths = tuple(env.Dir(SCons.PathList.PathList('$CPPPATH').subst_path(env, target, source)))
-    forceincludesfiles = [SCons.Node.FS.find_file(f, search_paths) for f in forceincludes]
-
     if for_signature:
+        search_paths = tuple(env.Dir(SCons.PathList.PathList('$CPPPATH').subst_path(env, target, source)))
+        forceincludesfiles = [SCons.Node.FS.find_file(f, search_paths) for f in forceincludes]
+        target.add_to_implicit(forceincludesfiles)
         return [f.get_csig() for f in forceincludesfiles]
 
-    return ' '.join([f'${{CPPFORCEINCLUDEPREFIX}}{fi}${{CPPFORCEINCLUDESUFFIX}}' for fi in forceincludes])
+    return env['_concat']('$CPPFORCEINCLUDEPREFIX', forceincludes, '$CPPFORCEINCLUDESUFFIX', env, lambda x: x, target=target, source=source)
 
 def generate(env, **kwargs):
     if not 'CPPFORCEINCLUDEPREFIX' in env:
