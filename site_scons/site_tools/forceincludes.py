@@ -22,17 +22,25 @@
 
 import SCons
 
+def _add_scanner(builder):
+
+    # We are taking over the target scanner here. If we want to not do
+    # that we need to invent a ListScanner concept to inject. What if
+    # the other scanner wants a different path_function?
+    assert builder.target_scanner is None
+
+    def new_scanner(node, env, path):
+        return [env.FindFile(f, path) for f in env.get('CPPFORCEINCLUDES', [])]
+
+    # The 'builder.builder' here is because we need to reach inside
+    # the CompositeBuilder that wraps the object builders that come
+    # back from createObjBuilders
+    builder.builder.target_scanner = SCons.Scanner.Scanner(
+        function=new_scanner, path_function=SCons.Script.FindPathDirs('CPPPATH')
+    )
+
 def _cppForceIncludesGenerator(target, source, env, for_signature):
     forceincludes = env.get('CPPFORCEINCLUDES', [])
-    if not forceincludes:
-        return []
-
-    if for_signature:
-        search_paths = tuple(env.Dir(SCons.PathList.PathList('$CPPPATH').subst_path(env, target, source)))
-        forceincludesfiles = [SCons.Node.FS.find_file(f, search_paths) for f in forceincludes]
-        target.add_to_implicit(forceincludesfiles)
-        return [f.get_csig() for f in forceincludesfiles]
-
     return env['_concat']('$CPPFORCEINCLUDEPREFIX', forceincludes, '$CPPFORCEINCLUDESUFFIX', env, lambda x: x, target=target, source=source)
 
 def generate(env, **kwargs):
@@ -51,6 +59,9 @@ def generate(env, **kwargs):
     env.Append(
         _CPPINCFLAGS='$_CPPFORCEINCLUDESGEN'
     )
+
+    for object_builder in SCons.Tool.createObjBuilders(env):
+        _add_scanner(object_builder)
 
 def exists(env):
     return True
