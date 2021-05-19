@@ -4,6 +4,7 @@ Import("env")
 Import("has_option")
 Import("use_libunwind")
 Import("debugBuild")
+Import("selected_experimental_optimizations")
 
 env = env.Clone(
     # Building with hidden visibility interferes with intercepting the
@@ -11,11 +12,36 @@ env = env.Clone(
     DISALLOW_VISHIDDEN=True,
 )
 
+# Inform tcmalloc if frame pointers aren't available.
+fp = 'nofp' not in selected_experimental_optimizations
+env.Append(
+    CPPDEFINES=[
+        'NO_FRAME_POINTER' if not fp else None,
+    ],
+)
+
 if use_libunwind:
+
+    # In gperftools-2.7, this happened for us automatically, but by
+    # gperftools-2.9 they removed the logic that interpreted having a
+    # frame pointer as meaning to not prefer libunwind, but only for
+    # x86_64. Manually set TCMALLOC_DONT_PREFER_LIBUNWIND in that
+    # situation to keep the behavior consistent with that of
+    # gperftools-2.7, since we have found the performance of the
+    # libunwind based stacktrace implementation to be too slow to
+    # support debug allocation. We still want to let it use libunwind
+    # if it needs to, but we don't want to prefer it over faster
+    # mechanisms. We can't just set it unconditionally, because if we
+    # did, then other platforms that reached the #define inside
+    # tcmalloc wouold error out with a repeated macro definition
+    # warning, which we would escalate to an error.
+    need_explicit_dont_prefer = (env['TARGET_ARCH'] == 'x86_64') and fp
+
     env.Append(
         CPPDEFINES=[
             ("HAVE_LIBUNWIND_H", "1"),
-            'HAVE_UCONTEXT_H'
+            'HAVE_UCONTEXT_H',
+            'TCMALLOC_DONT_PREFER_LIBUNWIND' if need_explicit_dont_prefer else None,
         ],
     )
     env.InjectThirdParty(libraries=['unwind'])
