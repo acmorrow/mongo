@@ -113,4 +113,4 @@ class FuzzerGenTaskService:
         ]
         commands = [command for command in commands if command is not None]
 
-        return Task(sub_task_name, commands, {TaskDependency("archive_dist_test_debug")})
+        return Task(sub_task_name, commands, {TaskDependency("archive_dist_test")})

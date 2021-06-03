@@ -115,7 +115,7 @@ class MultiversionGenTaskService:
             FunctionCall("run generated tests", run_tests_vars),
         ]
 
-        return Task(sub_task_name, commands, {TaskDependency("archive_dist_test_debug")})
+        return Task(sub_task_name, commands, {TaskDependency("archive_dist_test")})
 
     def _build_resmoke_args(self, suite_file: str, mixed_version_config: str,
                             params: MultiversionGenTaskParams) -> str:

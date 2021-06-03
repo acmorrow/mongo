@@ -173,5 +173,5 @@ class ResmokeGenTaskService:
     @staticmethod
     def _get_dependencies() -> Set[TaskDependency]:
         """Get the set of dependency tasks for these suites."""
-        dependencies = {TaskDependency("archive_dist_test_debug")}
+        dependencies = {TaskDependency("archive_dist_test")}
         return dependencies
